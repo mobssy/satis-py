@@ -1,3 +1,5 @@
+import schedule
+import time
 import asyncio
 import logging
 from datetime import datetime
@@ -70,4 +72,12 @@ async def main():
         logger.error(f"오류 발생: {e}")
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    def job():
+        asyncio.run(main())
+
+    schedule.every().day.at("11:00").do(job)
+    logger.info("뉴스 봇 스케줄 시작됨 - 매일 오전 11시")
+
+    while True:
+        schedule.run_pending()
+        time.sleep(60)
