@@ -43,10 +43,10 @@ async def send_telegram_message(message):
             for i, part in enumerate(parts, 1):
                 if len(parts) > 1:
                     part = f"[{i}/{len(parts)}]\n\n{part}"
-                await bot.send_message(chat_id=TELEGRAM_CHAT_ID, text=part)
+                await bot.send_message(chat_id=TELEGRAM_CHAT_ID, text=part, parse_mode='MarkdownV2')
                 await asyncio.sleep(1)  # 메시지 간 딜레이
         else:
-            await bot.send_message(chat_id=TELEGRAM_CHAT_ID, text=message)
+            await bot.send_message(chat_id=TELEGRAM_CHAT_ID, text=message, parse_mode='MarkdownV2')
         
         logger.info("✅ 메시지 전송 완료!")
         
