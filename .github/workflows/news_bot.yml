@@ -27,6 +27,7 @@ jobs:
         run: |
           echo "TELEGRAM_BOT_TOKEN = '${{ secrets.TELEGRAM_BOT_TOKEN }}'" > config.py
           echo "TELEGRAM_CHAT_ID = '${{ secrets.TELEGRAM_CHAT_ID }}'" >> config.py
+          echo "OPENAI_API_KEY = '${{ secrets.OPENAI_API_KEY }}'" >> config.py
 
       - name: Run news bot
         run: python main.py
