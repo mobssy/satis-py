@@ -1,0 +1,32 @@
+name: Daily News Bot
+
+on:
+  schedule:
+    # 매일 오전 11시 EST (UTC-5)에 실행
+    - cron: "0 16 * * *" # UTC 16:00 = EST 11:00
+  workflow_dispatch: # 수동 실행 옵션 추가
+
+jobs:
+  run-news-bot:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Create config file
+        run: |
+          echo "TELEGRAM_BOT_TOKEN = '${{ secrets.TELEGRAM_BOT_TOKEN }}'" > config.py
+          echo "TELEGRAM_CHAT_ID = '${{ secrets.TELEGRAM_CHAT_ID }}'" >> config.py
+
+      - name: Run news bot
+        run: python main.py
