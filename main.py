@@ -69,6 +69,7 @@ async def main():
             if article['title'] not in seen_titles:
                 seen_titles.add(article['title'])
                 filtered_apple_news.append(article)
+        logger.info(f"전송될 애플 뉴스: {len(filtered_apple_news)}개")
         
         for article in filtered_apple_news:
             summary = summarize_article(article['content'])
@@ -88,6 +89,7 @@ async def main():
             if article['title'] not in seen_titles:
                 seen_titles.add(article['title'])
                 filtered_korean_news.append(article)
+        logger.info(f"전송될 한국 뉴스: {len(filtered_korean_news)}개")
 
         for article in filtered_korean_news:
             summary = summarize_article(article['content'])
@@ -107,6 +109,7 @@ async def main():
             if article['title'] not in seen_titles:
                 seen_titles.add(article['title'])
                 filtered_world_news.append(article)
+        logger.info(f"전송될 세계 뉴스: {len(filtered_world_news)}개")
 
         for article in filtered_world_news:
             summary = summarize_article(article['content'])
@@ -126,6 +129,7 @@ async def main():
             if article['title'] not in seen_titles:
                 seen_titles.add(article['title'])
                 filtered_us_news.append(article)
+        logger.info(f"전송될 미국 뉴스: {len(filtered_us_news)}개")
 
         for article in filtered_us_news:
             summary = summarize_article(article['content'])
