@@ -45,4 +45,4 @@ ehthumbs.db
 Thumbs.db
 
 # Project specific
-config.py 
+config.py news_bot.log
