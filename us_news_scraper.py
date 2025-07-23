@@ -1,7 +1,6 @@
-import requests
 from bs4 import BeautifulSoup
 import logging
-import time
+from http_client import safe_request
 
 # 로깅 설정
 logging.basicConfig(
@@ -23,9 +22,10 @@ def get_nj_hot_news():
             'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
         }
         
-        # requests.get은 해당 URL에 HTTP GET 요청을 보내고 응답을 받음
-        response = requests.get(url, headers=headers)
-        response.raise_for_status()  # 요청 실패 시 예외 발생
+        # safe_request: 공통 HTTP 클라이언트 사용
+        response = safe_request(url, headers)
+        if not response:
+            return news_list
         
         # BeautifulSoup은 HTML/XML 문서를 파싱하여 데이터를 쉽게 추출할 수 있게 도와줌
         soup = BeautifulSoup(response.content, 'xml')
@@ -52,8 +52,7 @@ def get_nj_hot_news():
                     'content': summary
                 })
                 
-                # time.sleep(0.5)은 서버에 과도한 요청을 보내지 않도록 잠시 대기하는 역할
-                time.sleep(0.5)
+                # 서버 부담 방지는 safe_request에서 처리됨
                 
             except Exception as e:
                 # 예외가 발생해도 프로그램이 멈추지 않고 계속 실행되도록 처리
@@ -79,9 +78,10 @@ def get_ny_hot_news():
             'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
         }
         
-        # requests.get은 해당 URL에 HTTP GET 요청을 보내고 응답을 받음
-        response = requests.get(url, headers=headers)
-        response.raise_for_status()  # 요청 실패 시 예외 발생
+        # safe_request: 공통 HTTP 클라이언트 사용
+        response = safe_request(url, headers)
+        if not response:
+            return news_list
         
         # BeautifulSoup은 HTML/XML 문서를 파싱하여 데이터를 쉽게 추출할 수 있게 도와줌
         soup = BeautifulSoup(response.content, 'xml')
@@ -108,8 +108,7 @@ def get_ny_hot_news():
                     'content': summary
                 })
                 
-                # time.sleep(0.5)은 서버에 과도한 요청을 보내지 않도록 잠시 대기하는 역할
-                time.sleep(0.5)
+                # 서버 부담 방지는 safe_request에서 처리됨
                 
             except Exception as e:
                 # 예외가 발생해도 프로그램이 멈추지 않고 계속 실행되도록 처리
