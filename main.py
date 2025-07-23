@@ -58,6 +58,43 @@ async def send_news_safely(message, news_type):
     except Exception as e:
         logger.error(f"{news_type} 뉴스 전송 중 오류 발생: {e}")
 
+def create_news_message(news_list, news_type, emoji, escaped_time_for_header):
+    """뉴스 메시지를 생성하는 공통 함수"""
+    if not news_list:
+        return None
+    
+    try:
+        message = f"{emoji} {news_type} 뉴스 업데이트 {escaped_time_for_header}\n\n"
+        seen_titles = set()
+        filtered_news = []
+        
+        # 중복 제목 필터링
+        for article in news_list:
+            if article['title'] not in seen_titles:
+                seen_titles.add(article['title'])
+                filtered_news.append(article)
+        
+        logger.info(f"전송될 {news_type} 뉴스: {len(filtered_news)}개")
+        
+        # 각 기사를 메시지에 추가
+        for article in filtered_news:
+            try:
+                summary = summarize_article(article['content'])
+                escaped_title = escape_markdown_v2(article['title'])
+                escaped_summary = escape_markdown_v2(summary)
+                escaped_url = escape_markdown_v2(article['url'])
+                message += f"📌 *{escaped_title}*\n\n"
+                message += f"📝 {escaped_summary}\n\n"
+                message += f"🔗 {escaped_url}\n\n"
+            except Exception as e:
+                logger.error(f"{news_type} 뉴스 기사 처리 중 오류 발생: {e}")
+                continue
+        
+        return message
+    except Exception as e:
+        logger.error(f"{news_type} 뉴스 메시지 생성 중 오류 발생: {e}")
+        return None
+
 async def main():
     try:
         # 1. 뉴스 수집 시작
@@ -106,121 +143,18 @@ async def main():
         current_time = get_current_time().strftime("%Y년 %m월 %d일 %H시 %M분")
         escaped_time_for_header = escape_markdown_v2(f"({current_time})")
 
-        # --- 애플 뉴스 전송 처리 ---
-        if apple_news:
-            try:
-                apple_message = f"📱 애플 뉴스 업데이트 {escaped_time_for_header}\n\n"
-                seen_titles = set()
-                filtered_apple_news = []
-                for article in apple_news:
-                    if article['title'] not in seen_titles:
-                        seen_titles.add(article['title'])
-                        filtered_apple_news.append(article)
-                logger.info(f"전송될 애플 뉴스: {len(filtered_apple_news)}개")
-                
-                for article in filtered_apple_news:
-                    try:
-                        summary = summarize_article(article['content'])
-                        escaped_title = escape_markdown_v2(article['title'])
-                        escaped_summary = escape_markdown_v2(summary)
-                        escaped_url = escape_markdown_v2(article['url'])
-                        apple_message += f"📌 *{escaped_title}*\n\n"
-                        apple_message += f"📝 {escaped_summary}\n\n"
-                        apple_message += f"🔗 {escaped_url}\n\n"
-                    except Exception as e:
-                        logger.error(f"애플 뉴스 기사 처리 중 오류 발생: {e}")
-                        continue
-                
-                await send_news_safely(apple_message, "애플")
-            except Exception as e:
-                logger.error(f"애플 뉴스 메시지 생성 중 오류 발생: {e}")
+        # --- 각 뉴스 타입별 메시지 생성 및 전송 ---
+        news_configs = [
+            (apple_news, "애플", "📱"),
+            (korean_news, "한국", "🇰🇷"),
+            (world_news, "세계", "🌍"),
+            (us_news, "미국", "🇺🇸")
+        ]
         
-        # --- 한국 뉴스 전송 처리 ---
-        if korean_news:
-            try:
-                korean_message = f"🇰🇷 한국 뉴스 업데이트 {escaped_time_for_header}\n\n"
-                seen_titles = set()
-                filtered_korean_news = []
-                for article in korean_news:
-                    if article['title'] not in seen_titles:
-                        seen_titles.add(article['title'])
-                        filtered_korean_news.append(article)
-                logger.info(f"전송될 한국 뉴스: {len(filtered_korean_news)}개")
-
-                for article in filtered_korean_news:
-                    try:
-                        summary = summarize_article(article['content'])
-                        escaped_title = escape_markdown_v2(article['title'])
-                        escaped_summary = escape_markdown_v2(summary)
-                        escaped_url = escape_markdown_v2(article['url'])
-                        korean_message += f"📌 *{escaped_title}*\n\n"
-                        korean_message += f"📝 {escaped_summary}\n\n"
-                        korean_message += f"🔗 {escaped_url}\n\n"
-                    except Exception as e:
-                        logger.error(f"한국 뉴스 기사 처리 중 오류 발생: {e}")
-                        continue
-
-                await send_news_safely(korean_message, "한국")
-            except Exception as e:
-                logger.error(f"한국 뉴스 메시지 생성 중 오류 발생: {e}")
-        
-        # --- 세계 뉴스 전송 처리 ---
-        if world_news:
-            try:
-                world_message = f"🌍 세계 핫뉴스 업데이트 {escaped_time_for_header}\n\n"
-                seen_titles = set()
-                filtered_world_news = []
-                for article in world_news:
-                    if article['title'] not in seen_titles:
-                        seen_titles.add(article['title'])
-                        filtered_world_news.append(article)
-                logger.info(f"전송될 세계 뉴스: {len(filtered_world_news)}개")
-
-                for article in filtered_world_news:
-                    try:
-                        summary = summarize_article(article['content'])
-                        escaped_title = escape_markdown_v2(article['title'])
-                        escaped_summary = escape_markdown_v2(summary)
-                        escaped_url = escape_markdown_v2(article['url'])
-                        world_message += f"📌 *{escaped_title}*\n\n"
-                        world_message += f"📝 {escaped_summary}\n\n"
-                        world_message += f"🔗 {escaped_url}\n\n"
-                    except Exception as e:
-                        logger.error(f"세계 뉴스 기사 처리 중 오류 발생: {e}")
-                        continue
-
-                await send_news_safely(world_message, "세계")
-            except Exception as e:
-                logger.error(f"세계 뉴스 메시지 생성 중 오류 발생: {e}")
-        
-        # --- 미국 뉴스 전송 처리 ---
-        if us_news:
-            try:
-                us_message = f"🇺🇸 미국 뉴스 업데이트 {escaped_time_for_header}\n\n"
-                seen_titles = set()
-                filtered_us_news = []
-                for article in us_news:
-                    if article['title'] not in seen_titles:
-                        seen_titles.add(article['title'])
-                        filtered_us_news.append(article)
-                logger.info(f"전송될 미국 뉴스: {len(filtered_us_news)}개")
-
-                for article in filtered_us_news:
-                    try:
-                        summary = summarize_article(article['content'])
-                        escaped_title = escape_markdown_v2(article['title'])
-                        escaped_summary = escape_markdown_v2(summary)
-                        escaped_url = escape_markdown_v2(article['url'])
-                        us_message += f"📌 *{escaped_title}*\n\n"
-                        us_message += f"📝 {escaped_summary}\n\n"
-                        us_message += f"🔗 {escaped_url}\n\n"
-                    except Exception as e:
-                        logger.error(f"미국 뉴스 기사 처리 중 오류 발생: {e}")
-                        continue
-
-                await send_news_safely(us_message, "미국")
-            except Exception as e:
-                logger.error(f"미국 뉴스 메시지 생성 중 오류 발생: {e}")
+        for news_list, news_type, emoji in news_configs:
+            if news_list:
+                message = create_news_message(news_list, news_type, emoji, escaped_time_for_header)
+                await send_news_safely(message, news_type)
         
         logger.info("모든 뉴스 전송 완료!")
         

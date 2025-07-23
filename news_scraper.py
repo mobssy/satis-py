@@ -1,8 +1,7 @@
-import requests
 from bs4 import BeautifulSoup
 from datetime import datetime
-import time
 import logging
+from http_client import safe_request
 
 # 로깅 설정
 logging.basicConfig(
@@ -18,14 +17,11 @@ def fetch_9to5mac_news():
     try:
         # 9to5Mac 메인 페이지 URL 설정
         url = "https://9to5mac.com"
-        headers = {
-            # 웹사이트에 브라우저에서 접속하는 것처럼 보이도록 User-Agent 설정
-            'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
-        }
         
-        # requests.get: 웹페이지를 요청하여 HTML 데이터를 가져옴
-        response = requests.get(url, headers=headers)
-        response.raise_for_status()  # 요청 실패시 예외 발생
+        # 공통 HTTP 클라이언트 사용
+        response = safe_request(url)
+        if not response:
+            return articles
         
         # BeautifulSoup: HTML 파싱을 통해 문서 구조를 탐색할 수 있게 함
         soup = BeautifulSoup(response.text, 'html.parser')
@@ -66,8 +62,9 @@ def fetch_9to5mac_news():
                     link = 'https://9to5mac.com' + link
                 
                 # 기사 상세 페이지 요청 및 파싱
-                article_response = requests.get(link, headers=headers)
-                article_response.raise_for_status()
+                article_response = safe_request(link)
+                if not article_response:
+                    continue
                 article_soup = BeautifulSoup(article_response.text, 'html.parser')
                 
                 # 본문 내용 추출: 여러 선택자를 시도하여 본문을 찾음
@@ -91,8 +88,7 @@ def fetch_9to5mac_news():
                     'source': '9to5mac'
                 })
                 
-                # time.sleep: 서버 과부하 방지를 위해 요청 사이에 잠시 대기
-                time.sleep(1)
+                # 서버 과부하 방지는 safe_request에서 처리됨
                 
             except Exception as e:
                 # try-except: 개별 기사 처리 중 오류 발생시 로그 기록 후 다음 기사로 진행
@@ -113,14 +109,11 @@ def fetch_macrumors_news():
     try:
         # MacRumors 메인 페이지 URL 설정
         url = "https://www.macrumors.com"
-        headers = {
-            # 웹사이트에 브라우저에서 접속하는 것처럼 보이도록 User-Agent 설정
-            'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
-        }
         
-        # requests.get: 웹페이지를 요청하여 HTML 데이터를 가져옴
-        response = requests.get(url, headers=headers)
-        response.raise_for_status()  # 요청 실패시 예외 발생
+        # 공통 HTTP 클라이언트 사용
+        response = safe_request(url)
+        if not response:
+            return articles
         
         # BeautifulSoup: HTML 파싱을 통해 문서 구조를 탐색할 수 있게 함
         soup = BeautifulSoup(response.text, 'html.parser')
@@ -161,8 +154,9 @@ def fetch_macrumors_news():
                     link = 'https://www.macrumors.com' + link
                 
                 # 기사 상세 페이지 요청 및 파싱
-                article_response = requests.get(link, headers=headers)
-                article_response.raise_for_status()
+                article_response = safe_request(link)
+                if not article_response:
+                    continue
                 article_soup = BeautifulSoup(article_response.text, 'html.parser')
                 
                 # 본문 내용 추출: 여러 선택자를 시도하여 본문을 찾음
@@ -186,8 +180,7 @@ def fetch_macrumors_news():
                     'source': 'macrumors'
                 })
                 
-                # time.sleep: 서버 과부하 방지를 위해 요청 사이에 잠시 대기
-                time.sleep(1)
+                # 서버 과부하 방지는 safe_request에서 처리됨
                 
             except Exception as e:
                 # try-except: 개별 기사 처리 중 오류 발생시 로그 기록 후 다음 기사로 진행

@@ -19,7 +19,8 @@ def job():
     """실행할 작업"""
     try:
         logging.info("뉴스 수집 및 전송 작업 시작")  # 작업 시작 로그 기록
-        main()  # 실제 뉴스 수집 및 전송 함수 호출
+        import asyncio
+        asyncio.run(main())  # 비동기 함수를 올바르게 호출
         logging.info("작업 완료")  # 작업 완료 로그 기록
     except Exception as e:
         logging.error(f"작업 중 오류 발생: {e}")  # 예외 발생 시 오류 로그 기록
