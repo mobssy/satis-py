@@ -1,8 +1,7 @@
-import requests
 from bs4 import BeautifulSoup
-import time
 from datetime import datetime
 import logging
+from http_client import safe_request
 
 # 로깅 설정: 프로그램 실행 중 발생하는 정보를 기록하기 위한 설정입니다.
 logging.basicConfig(
