@@ -45,4 +45,7 @@ ehthumbs.db
 Thumbs.db
 
 # Project specific
-config.py news_bot.log
+news_bot.log
+
+# Environment variables (보안상 중요)
+.env
