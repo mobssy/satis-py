@@ -24,10 +24,10 @@ def get_naver_news():
             'Accept-Language': 'ko-KR,ko;q=0.9,en-US;q=0.8,en;q=0.7',
         }
         
-        # requests.get: URL에 접속하여 웹 페이지 내용을 가져옵니다.
-        response = requests.get(url, headers=headers)
-        # 접속에 문제가 있으면 예외를 발생시킵니다.
-        response.raise_for_status()
+        # safe_request: 공통 HTTP 클라이언트 사용
+        response = safe_request(url, headers)
+        if not response:
+            return articles
         
         # BeautifulSoup: 가져온 HTML 문서를 파이썬에서 다루기 쉽게 변환합니다.
         soup = BeautifulSoup(response.text, 'html.parser')
@@ -63,8 +63,9 @@ def get_naver_news():
                     continue
                 
                 # 뉴스 기사 본문 내용을 가져오기 위해 다시 요청합니다.
-                article_response = requests.get(link, headers=headers)
-                article_response.raise_for_status()
+                article_response = safe_request(link, headers)
+                if not article_response:
+                    continue
                 article_soup = BeautifulSoup(article_response.text, 'html.parser')
                 
                 # 본문 내용 추출을 위해 여러 선택자를 시도합니다.
@@ -90,8 +91,7 @@ def get_naver_news():
                     'source': 'naver'
                 })
                 
-                # time.sleep: 서버에 부담을 주지 않기 위해 잠시 멈춥니다.
-                time.sleep(1)
+                # 서버 부담 방지는 safe_request에서 처리됨
                 
             except Exception as e:
                 # 개별 뉴스 처리 중 오류가 발생해도 전체 크롤링은 계속 진행합니다.
@@ -117,9 +117,10 @@ def get_nate_news():
             'Accept-Language': 'ko-KR,ko;q=0.9,en-US;q=0.8,en;q=0.7',
         }
         
-        # requests.get: 네이트 뉴스 페이지 내용을 가져옵니다.
-        response = requests.get(url, headers=headers)
-        response.raise_for_status()
+        # safe_request: 공통 HTTP 클라이언트 사용
+        response = safe_request(url, headers)
+        if not response:
+            return articles
         
         # BeautifulSoup으로 HTML 파싱
         soup = BeautifulSoup(response.text, 'html.parser')
@@ -150,8 +151,9 @@ def get_nate_news():
                     continue
                 
                 # 뉴스 기사 본문 내용 요청 및 파싱
-                article_response = requests.get(link, headers=headers)
-                article_response.raise_for_status()
+                article_response = safe_request(link, headers)
+                if not article_response:
+                    continue
                 article_soup = BeautifulSoup(article_response.text, 'html.parser')
                 
                 # 본문 내용 추출 시도
@@ -176,8 +178,7 @@ def get_nate_news():
                     'source': 'nate'
                 })
                 
-                # 서버 부담 방지를 위해 잠시 대기
-                time.sleep(1)
+                # 서버 부담 방지는 safe_request에서 처리됨
                 
             except Exception as e:
                 # 개별 뉴스 처리 중 오류 발생 시 로그 기록 후 계속 진행
@@ -201,8 +202,9 @@ def get_google_world_news():
         }
         
         # RSS 피드를 요청합니다.
-        response = requests.get(url, headers=headers)
-        response.raise_for_status()
+        response = safe_request(url, headers)
+        if not response:
+            return news_list
         
         # XML 형식의 RSS를 파싱합니다.
         soup = BeautifulSoup(response.content, 'xml')
@@ -229,8 +231,7 @@ def get_google_world_news():
                     'content': summary
                 })
                 
-                # 서버에 부담을 주지 않도록 짧게 대기합니다.
-                time.sleep(0.5)
+                # 서버 부담 방지는 safe_request에서 처리됨
                 
             except Exception as e:
                 # 개별 뉴스 항목 처리 중 오류 발생 시 로그 기록 후 계속 진행
