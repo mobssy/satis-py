@@ -32,7 +32,7 @@ def run_scheduler():
     
     # 매일 오전 11시 EST 기준으로 job() 함수를 실행하도록 예약
     # schedule 라이브러리는 기본적으로 시스템 시간 기준이지만, 여기서는 주석으로 시간대 명시
-    schedule.every().day.at("11:00").do(job)
+    schedule.every().day.at("10:00").do(job)
     
     logging.info("스케줄러가 시작되었습니다.")
     # 한국 시간으로 변환하여 다음 실행 예정 시간 표시
