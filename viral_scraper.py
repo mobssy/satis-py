@@ -5,6 +5,10 @@ from bs4 import BeautifulSoup
 import json
 from datetime import datetime
 import re
+import requests
+from pytrends.request import TrendReq
+import praw
+# import snscrape.modules.twitter as sntwitter  # 호환성 문제로 주석 처리
 
 logger = logging.getLogger(__name__)
 
@@ -46,24 +50,32 @@ async def get_us_viral_trends():
     return viral_content[:5]
 
 async def get_korea_viral_trends():
-    """한국에서 바이럴 되는 콘텐츠를 수집하는 함수"""
+    """한국에서 바이럴 되는 콘텐츠를 수집하는 함수 (새로운 바이럴 소스 사용)"""
     viral_content = []
     
     try:
-        # 네이버 실시간 검색어 관련 콘텐츠 수집
-        naver_trends = await get_naver_realtime_search()
-        viral_content.extend(naver_trends[:3])
+        # Google Trends 한국 트렌드
+        google_trends = get_google_trends()
+        viral_content.extend(google_trends[:3])
         
-        # 루리웹 핫게 수집
-        ruliweb_content = await get_ruliweb_hot()
-        viral_content.extend(ruliweb_content[:2])
+        # Reddit 밈/인기 콘텐츠
+        reddit_content = get_reddit_trending()
+        viral_content.extend(reddit_content[:2])
         
-        logger.info(f"한국 바이럴 콘텐츠 {len(viral_content)}개 수집 완료")
+        # Twitter 트렌딩 트윗
+        twitter_content = get_twitter_trending()
+        viral_content.extend(twitter_content[:2])
+        
+        # TikTok 트렌드 (선택적)
+        tiktok_content = get_tiktok_trending()
+        viral_content.extend(tiktok_content[:1])
+        
+        logger.info(f"한국 바이럴 콘텐츠 {len(viral_content)}개 수집 완료 (새로운 소스)")
         
     except Exception as e:
         logger.error(f"한국 바이럴 콘텐츠 수집 중 오류 발생: {e}")
     
-    return viral_content[:5]
+    return viral_content[:10]
 
 async def get_reddit_popular():
     """Reddit r/popular에서 인기 콘텐츠 수집"""
@@ -226,3 +238,142 @@ async def get_ruliweb_hot():
             'content': '루리웹 커뮤니티의 인기 게시글 (데이터 수집 중 오류 발생)',
             'url': 'https://bbs.ruliweb.com'
         }]
+
+def get_google_trends():
+    """Google Trends에서 실시간 트렌딩 키워드 수집"""
+    try:
+        pytrends = TrendReq(hl='ko-KR', tz=540)
+        trending_searches = pytrends.trending_searches(pn='south_korea')
+        
+        results = []
+        for i, keyword in enumerate(trending_searches[0][:10]):
+            pytrends.build_payload([keyword], timeframe='now 1-d', geo='KR')
+            interest_data = pytrends.interest_over_time()
+            
+            description = f"한국에서 급상승 검색어 #{i+1}"
+            if not interest_data.empty:
+                peak_value = interest_data[keyword].max()
+                description += f" (검색량: {peak_value})"
+            
+            results.append({
+                'title': keyword,
+                'content': description,
+                'url': f"https://trends.google.com/trends/explore?geo=KR&q={keyword}"
+            })
+        
+        return results
+        
+    except Exception as e:
+        logger.error(f"Google Trends 수집 중 오류: {e}")
+        return [{
+            'title': '샘플 트렌드',
+            'content': 'Google Trends 데이터 수집 실패',
+            'url': 'https://trends.google.com'
+        }]
+
+def get_reddit_trending():
+    """Reddit에서 인기 글 수집 (PRAW 사용)"""
+    try:
+        reddit = praw.Reddit(
+            client_id="YOUR_CLIENT_ID",
+            client_secret="YOUR_CLIENT_SECRET", 
+            user_agent="viral_scraper 1.0 by u/yourusername"
+        )
+        
+        results = []
+        
+        # r/memes와 r/popular에서 hot 포스트 수집
+        for subreddit_name in ['memes', 'popular']:
+            subreddit = reddit.subreddit(subreddit_name)
+            for post in subreddit.hot(limit=5):
+                content = post.selftext[:200] if post.selftext else "이미지/링크 콘텐츠"
+                if post.url and any(ext in post.url for ext in ['.jpg', '.png', '.gif', '.webp']):
+                    content = f"이미지 콘텐츠: {post.url}"
+                
+                results.append({
+                    'title': post.title,
+                    'content': content,
+                    'url': f"https://reddit.com{post.permalink}"
+                })
+        
+        return results[:10]
+        
+    except Exception as e:
+        logger.error(f"Reddit 데이터 수집 중 오류: {e}")
+        # Reddit API 없이 웹 스크래핑으로 대체
+        try:
+            response = requests.get('https://www.reddit.com/r/memes.json', 
+                                  headers={'User-Agent': 'viral_scraper'})
+            if response.status_code == 200:
+                data = response.json()
+                results = []
+                for post in data['data']['children'][:10]:
+                    post_data = post['data']
+                    results.append({
+                        'title': post_data.get('title', '제목 없음'),
+                        'content': post_data.get('selftext', '')[:200] or '이미지/링크 콘텐츠',
+                        'url': f"https://reddit.com{post_data.get('permalink', '')}"
+                    })
+                return results
+        except Exception as fallback_e:
+            logger.error(f"Reddit 웹 스크래핑 대체 방법도 실패: {fallback_e}")
+            
+        return [{
+            'title': '샘플 Reddit 포스트',
+            'content': 'Reddit 데이터 수집 실패',
+            'url': 'https://reddit.com/r/memes'
+        }]
+
+def get_twitter_trending():
+    """Twitter에서 트렌딩 트윗 수집 (샘플 데이터)"""
+    try:
+        # snscrape 호환성 문제로 인해 샘플 데이터 반환
+        # 실제 사용시에는 Twitter API v2 또는 다른 방법 사용 권장
+        sample_tweets = [
+            {
+                'title': '@트위터유저1의 바이럴 트윗',
+                'content': '요즘 핫한 밈과 짤이 담긴 트위터 트렌딩 콘텐츠',
+                'url': 'https://twitter.com'
+            },
+            {
+                'title': '@인플루언서의 화제 트윗',
+                'content': '전 세계적으로 화제가 되고 있는 바이럴 트위터 콘텐츠',
+                'url': 'https://twitter.com'
+            }
+        ]
+        
+        logger.info("Twitter 트렌드 데이터 (샘플)")
+        return sample_tweets
+        
+    except Exception as e:
+        logger.error(f"Twitter 데이터 수집 중 오류: {e}")
+        return [{
+            'title': '샘플 트윗',
+            'content': 'Twitter 데이터 수집 실패 - API 제한 또는 연결 오류',
+            'url': 'https://twitter.com'
+        }]
+
+def get_tiktok_trending():
+    """TikTok 트렌딩 콘텐츠 수집 (제한적)"""
+    try:
+        # TikTok은 공식 API가 제한적이므로 샘플 데이터 반환
+        # 실제로는 외부 API나 미러 사이트를 활용해야 함
+        sample_trends = [
+            {
+                'title': '인기 챌린지 #1',
+                'content': 'TikTok에서 현재 인기인 댄스 챌린지',
+                'url': 'https://www.tiktok.com'
+            },
+            {
+                'title': '바이럴 해시태그 #2',
+                'content': 'TikTok 글로벌 트렌딩 해시태그',
+                'url': 'https://www.tiktok.com'
+            }
+        ]
+        
+        logger.info("TikTok 트렌드 데이터 (샘플)")
+        return sample_trends
+        
+    except Exception as e:
+        logger.error(f"TikTok 데이터 수집 중 오류: {e}")
+        return []

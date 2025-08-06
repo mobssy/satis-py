@@ -92,3 +92,6 @@ webdriver-manager==4.0.2
 websocket-client==1.8.0
 wsproto==1.2.0
 yarl==1.20.1
+pytrends==4.9.2
+praw==7.8.1
+snscrape==0.6.2.20230320
