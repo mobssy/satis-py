@@ -8,6 +8,11 @@ import re
 import requests
 from pytrends.request import TrendReq
 import praw
+import time
+import subprocess
+from typing import List, Dict, Any, Optional
+from concurrent.futures import ThreadPoolExecutor, as_completed
+from functools import wraps
 # import snscrape.modules.twitter as sntwitter  # 호환성 문제로 주석 처리
 
 logger = logging.getLogger(__name__)
@@ -89,7 +94,6 @@ async def get_korea_viral_trends():
     
     return viral_content[:10]
 
-@retry_on_failure()
 async def get_reddit_popular() -> List[Dict[str, Any]]:
     """Reddit r/popular에서 인기 콘텐츠 수집"""
     try:
@@ -114,7 +118,6 @@ async def get_reddit_popular() -> List[Dict[str, Any]]:
         logger.error(f"Reddit 인기 콘텐츠 수집 중 오류: {e}")
         return []
 
-@retry_on_failure()
 async def get_reddit_us() -> List[Dict[str, Any]]:
     """Reddit 미국 관련 서브레딧에서 인기 콘텐츠 수집"""
     try:
@@ -139,7 +142,6 @@ async def get_reddit_us() -> List[Dict[str, Any]]:
         logger.error(f"Reddit 미국 콘텐츠 수집 중 오류: {e}")
         return []
 
-@retry_on_failure()
 async def get_hackernews_trending() -> List[Dict[str, Any]]:
     """Hacker News에서 인기 콘텐츠 수집"""
     try:
