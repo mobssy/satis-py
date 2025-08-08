@@ -49,3 +49,9 @@ news_bot.log
 
 # Environment variables (보안상 중요)
 .env
+
+# runtime & local
+news_bot.log
+__pycache__/
+*.pyc
+.env
