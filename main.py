@@ -6,7 +6,6 @@ from news_scraper import fetch_9to5mac_news, fetch_macrumors_news
 from korean_news_scraper import get_naver_news, get_nate_news, get_google_world_news
 from us_news_scraper import get_nj_hot_news, get_ny_hot_news
 from bigtech_news_scraper import get_bigtech_news
-from viral_scraper import get_global_viral_trends, get_us_viral_trends, get_korea_viral_trends
 from telegram_sender import send_telegram_message
 from summarizer import summarize_article
 
@@ -149,28 +148,6 @@ async def main():
         except Exception as e:
             logger.error(f"빅테크 뉴스 수집 중 오류 발생: {e}")
         
-        # 바이럴 콘텐츠 수집
-        global_viral = []
-        us_viral = []
-        korea_viral = []
-        
-        try:
-            global_viral = await get_global_viral_trends()
-            logger.info(f"전세계 바이럴 콘텐츠 {len(global_viral)}개 수집 완료")
-        except Exception as e:
-            logger.error(f"전세계 바이럴 콘텐츠 수집 중 오류 발생: {e}")
-        
-        try:
-            us_viral = await get_us_viral_trends()
-            logger.info(f"미국 바이럴 콘텐츠 {len(us_viral)}개 수집 완료")
-        except Exception as e:
-            logger.error(f"미국 바이럴 콘텐츠 수집 중 오류 발생: {e}")
-        
-        try:
-            korea_viral = await get_korea_viral_trends()
-            logger.info(f"한국 바이럴 콘텐츠 {len(korea_viral)}개 수집 완료")
-        except Exception as e:
-            logger.error(f"한국 바이럴 콘텐츠 수집 중 오류 발생: {e}")
         
         # 2. 텔레그램으로 뉴스 전송 준비
         current_time = get_current_time().strftime("%Y년 %m월 %d일 %H시 %M분")
@@ -182,10 +159,7 @@ async def main():
             (korean_news, "한국", "🇰🇷"),
             (world_news, "세계", "🌍"),
             (us_news, "미국", "🇺🇸"),
-            (bigtech_news, "빅테크", "🏢"),
-            (global_viral, "전세계 바이럴", "🔥"),
-            (us_viral, "미국 바이럴", "🇺🇸🔥"),
-            (korea_viral, "한국 바이럴", "🇰🇷🔥")
+            (bigtech_news, "빅테크", "🏢")
         ]
         
         for news_list, news_type, emoji in news_configs:
