@@ -58,4 +58,4 @@ The bot can be configured through the following files:
 
 ## License
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+This project is licensed under the MIT License - see the LICENSE file for details..
