@@ -4,6 +4,7 @@ from telegram import Bot
 from config import TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID
 import asyncio
 import logging
+from typing import List
 
 # 로깅 설정
 logging.basicConfig(
@@ -16,7 +17,7 @@ logger = logging.getLogger(__name__)
 # 텔레그램 메시지 최대 길이 (4096자)
 MAX_MESSAGE_LENGTH = 4096
 
-async def send_telegram_message(message):
+async def send_telegram_message(message: str) -> None:
     """텔레그램으로 메시지 전송"""
     try:
         logger.info("📨 Telegram 메시지 전송 중...")
@@ -66,7 +67,7 @@ async def send_telegram_message(message):
     except Exception as e:
         logger.error(f"❌ Telegram 전송 실패: {e}")
 
-async def test_bot():
+async def test_bot() -> None:
     """텔레그램 봇 테스트"""
     try:
         logger.info("🤖 봇 테스트 시작...")

@@ -1,6 +1,7 @@
 import openai
 from config import OPENAI_API_KEY
 import logging
+from typing import Optional
 
 # 로깅 설정
 logging.basicConfig(
@@ -12,7 +13,7 @@ logger = logging.getLogger(__name__)
 
 openai.api_key = OPENAI_API_KEY
 
-def summarize_article(text):
+def summarize_article(text: str) -> str:
     """
     주어진 뉴스 기사 텍스트를 한국어로 간결하게 요약하는 함수입니다.
     OpenAI의 GPT-3.5 Turbo 모델을 사용하여 요약을 생성합니다.

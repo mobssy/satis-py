@@ -1,9 +1,12 @@
 from bs4 import BeautifulSoup
 from datetime import datetime
 import logging
-from http_client import safe_request
+from http_client import safe_request, safe_request_async
+from abc import ABC, abstractmethod
+from typing import List, Dict, Optional, Any
+import asyncio
 
-# 로깅 설정
+
 logging.basicConfig(
     level=logging.INFO,
     format='[%(asctime)s] %(message)s',
@@ -11,186 +14,197 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-def fetch_9to5mac_news():
-    """9to5Mac에서 애플 관련 뉴스 수집"""
-    articles = []
-    try:
-        # 9to5Mac 메인 페이지 URL 설정
-        url = "https://9to5mac.com"
-        
-        # 공통 HTTP 클라이언트 사용
-        response = safe_request(url)
-        if not response:
-            return articles
-        
-        # BeautifulSoup: HTML 파싱을 통해 문서 구조를 탐색할 수 있게 함
-        soup = BeautifulSoup(response.text, 'html.parser')
-        
-        # 여러 선택자를 사용하는 이유:
-        # 웹사이트 구조가 변경될 수 있으므로 다양한 CSS 선택자를 시도하여 최신 기사 요소를 찾음
-        news_items = []
-        for selector in ['article', '.post', '.article', '.entry']:
-            # select: CSS 선택자를 사용해 여러 요소를 선택
-            items = soup.select(selector)
-            if items:
-                news_items = items[:5]  # 상위 5개 기사만 선택
-                break
-        
-        for item in news_items:
-            try:
-                # 제목 요소 찾기: 여러 선택자를 시도하여 제목을 찾음
-                title_elem = None
-                for title_selector in ['h2', 'h3', '.title', '.entry-title']:
-                    # select_one: CSS 선택자로 단일 요소 선택
-                    title_elem = item.select_one(title_selector)
-                    if title_elem:
-                        break
-                
-                if not title_elem:
-                    continue  # 제목이 없으면 다음 기사로 넘어감
-                    
-                title = title_elem.text.strip()
-                
-                # 링크 요소 찾기
-                link_elem = item.select_one('a')
-                if not link_elem or 'href' not in link_elem.attrs:
-                    continue  # 링크가 없으면 다음 기사로
-                
-                link = link_elem['href']
-                if not link.startswith('http'):
-                    # 상대경로인 경우 절대경로로 변환
-                    link = 'https://9to5mac.com' + link
-                
-                # 기사 상세 페이지 요청 및 파싱
-                article_response = safe_request(link)
-                if not article_response:
-                    continue
-                article_soup = BeautifulSoup(article_response.text, 'html.parser')
-                
-                # 본문 내용 추출: 여러 선택자를 시도하여 본문을 찾음
-                content = None
-                for content_selector in ['article', '.post-content', '.entry-content', '.article-content']:
-                    content_elem = article_soup.select_one(content_selector)
-                    if content_elem:
-                        # 불필요한 요소 제거 (광고, 관련 게시물 등)
-                        for tag in content_elem.select('.advertisement, .related-posts, .comments, .social-share'):
-                            tag.decompose()
-                        content = content_elem.text.strip()
-                        break
-                
-                if not content:
-                    content = f"제목: {title}\n\n내용을 가져올 수 없습니다."
-                
-                articles.append({
-                    'title': title,
-                    'content': content,
-                    'url': link,
-                    'source': '9to5mac'
-                })
-                
-                # 서버 과부하 방지는 safe_request에서 처리됨
-                
-            except Exception as e:
-                # try-except: 개별 기사 처리 중 오류 발생시 로그 기록 후 다음 기사로 진행
-                logger.error(f"9to5mac 기사 처리 중 오류: {e}")
-                continue
-                
-    except Exception as e:
-        # 전체 크롤링 과정에서 오류 발생시 로그 기록
-        logger.error(f"9to5mac 크롤링 중 오류: {e}")
-    
-    # 수집된 기사 수 로그 출력
-    logger.info(f"9to5mac: {len(articles)} articles found")
-    return articles
 
-def fetch_macrumors_news():
-    """MacRumors에서 애플 관련 뉴스 수집"""
-    articles = []
-    try:
-        # MacRumors 메인 페이지 URL 설정
-        url = "https://www.macrumors.com"
+class NewsScraperBase(ABC):
+    def __init__(self, base_url: str, source_name: str):
+        self.base_url = base_url
+        self.source_name = source_name
+        self.logger = logging.getLogger(__name__)
+    
+    def scrape_news(self, max_articles: int = 5) -> List[Dict[str, str]]:
+        articles = []
+        try:
+            response = safe_request(self.base_url)
+            if not response:
+                return articles
+            
+            soup = BeautifulSoup(response.text, 'html.parser')
+            news_items = self._find_news_items(soup, max_articles)
+            
+            for item in news_items:
+                try:
+                    article_data = self._extract_article_data(item)
+                    if article_data:
+                        articles.append(article_data)
+                except Exception as e:
+                    self.logger.error(f"{self.source_name} 기사 처리 중 오류: {e}")
+                    continue
+                    
+        except Exception as e:
+            self.logger.error(f"{self.source_name} 크롤링 중 오류: {e}")
         
-        # 공통 HTTP 클라이언트 사용
-        response = safe_request(url)
-        if not response:
-            return articles
+        self.logger.info(f"{self.source_name}: {len(articles)} articles found")
+        return articles
+    
+    async def scrape_news_async(self, max_articles: int = 5) -> List[Dict[str, str]]:
+        articles = []
+        try:
+            response_text = await safe_request_async(self.base_url)
+            if not response_text:
+                return articles
+            
+            soup = BeautifulSoup(response_text, 'html.parser')
+            news_items = self._find_news_items(soup, max_articles)
+            
+            # 병렬로 기사 콘텐츠 추출
+            tasks = []
+            for item in news_items:
+                title = self._extract_title(item)
+                link = self._extract_link(item)
+                if title and link:
+                    tasks.append(self._extract_article_async(title, link))
+            
+            if tasks:
+                results = await asyncio.gather(*tasks, return_exceptions=True)
+                for result in results:
+                    if isinstance(result, dict):
+                        articles.append(result)
+                    elif isinstance(result, Exception):
+                        self.logger.error(f"{self.source_name} 기사 처리 중 오류: {result}")
+                    
+        except Exception as e:
+            self.logger.error(f"{self.source_name} 크롤링 중 오류: {e}")
         
-        # BeautifulSoup: HTML 파싱을 통해 문서 구조를 탐색할 수 있게 함
-        soup = BeautifulSoup(response.text, 'html.parser')
-        
-        # 여러 선택자를 사용하는 이유:
-        # 웹사이트 구조가 변경될 수 있으므로 다양한 CSS 선택자를 시도하여 최신 기사 요소를 찾음
-        news_items = []
-        for selector in ['article', '.post', '.article', '.entry']:
-            # select: CSS 선택자를 사용해 여러 요소를 선택
+        self.logger.info(f"{self.source_name}: {len(articles)} articles found")
+        return articles
+    
+    def _find_news_items(self, soup: BeautifulSoup, max_articles: int) -> List[Any]:
+        selectors = ['article', '.post', '.article', '.entry']
+        for selector in selectors:
             items = soup.select(selector)
             if items:
-                news_items = items[:5]  # 상위 5개 기사만 선택
-                break
-        
-        for item in news_items:
-            try:
-                # 제목 요소 찾기: 여러 선택자를 시도하여 제목을 찾음
-                title_elem = None
-                for title_selector in ['h2', 'h3', '.title', '.entry-title']:
-                    # select_one: CSS 선택자로 단일 요소 선택
-                    title_elem = item.select_one(title_selector)
-                    if title_elem:
-                        break
-                
-                if not title_elem:
-                    continue  # 제목이 없으면 다음 기사로 넘어감
-                    
-                title = title_elem.text.strip()
-                
-                # 링크 요소 찾기
-                link_elem = item.select_one('a')
-                if not link_elem or 'href' not in link_elem.attrs:
-                    continue  # 링크가 없으면 다음 기사로
-                
-                link = link_elem['href']
-                if not link.startswith('http'):
-                    # 상대경로인 경우 절대경로로 변환
-                    link = 'https://www.macrumors.com' + link
-                
-                # 기사 상세 페이지 요청 및 파싱
-                article_response = safe_request(link)
-                if not article_response:
-                    continue
-                article_soup = BeautifulSoup(article_response.text, 'html.parser')
-                
-                # 본문 내용 추출: 여러 선택자를 시도하여 본문을 찾음
-                content = None
-                for content_selector in ['article', '.post-content', '.entry-content', '.article-content']:
-                    content_elem = article_soup.select_one(content_selector)
-                    if content_elem:
-                        # 불필요한 요소 제거 (광고, 관련 게시물 등)
-                        for tag in content_elem.select('.advertisement, .related-posts, .comments, .social-share'):
-                            tag.decompose()
-                        content = content_elem.text.strip()
-                        break
-                
-                if not content:
-                    content = f"제목: {title}\n\n내용을 가져올 수 없습니다."
-                
-                articles.append({
-                    'title': title,
-                    'content': content,
-                    'url': link,
-                    'source': 'macrumors'
-                })
-                
-                # 서버 과부하 방지는 safe_request에서 처리됨
-                
-            except Exception as e:
-                # try-except: 개별 기사 처리 중 오류 발생시 로그 기록 후 다음 기사로 진행
-                logger.error(f"MacRumors 기사 처리 중 오류: {e}")
-                continue
-                
-    except Exception as e:
-        # 전체 크롤링 과정에서 오류 발생시 로그 기록
-        logger.error(f"MacRumors 크롤링 중 오류: {e}")
+                return items[:max_articles]
+        return []
     
-    # 수집된 기사 수 로그 출력
-    logger.info(f"MacRumors: {len(articles)} articles found")
-    return articles
+    def _extract_article_data(self, item: Any) -> Optional[Dict[str, str]]:
+        title = self._extract_title(item)
+        if not title:
+            return None
+        
+        link = self._extract_link(item)
+        if not link:
+            return None
+        
+        content = self._extract_content(link)
+        if not content:
+            content = f"제목: {title}\n\n내용을 가져올 수 없습니다."
+        
+        return {
+            'title': title,
+            'content': content,
+            'url': link,
+            'source': self.source_name.lower()
+        }
+    
+    def _extract_title(self, item: Any) -> Optional[str]:
+        title_selectors = ['h2', 'h3', '.title', '.entry-title']
+        for selector in title_selectors:
+            title_elem = item.select_one(selector)
+            if title_elem:
+                return title_elem.text.strip()
+        return None
+    
+    def _extract_link(self, item: Any) -> Optional[str]:
+        link_elem = item.select_one('a')
+        if not link_elem or 'href' not in link_elem.attrs:
+            return None
+        
+        link = link_elem['href']
+        if not link.startswith('http'):
+            link = self.base_url + link
+        
+        return link
+    
+    def _extract_content(self, url: str) -> Optional[str]:
+        try:
+            response = safe_request(url)
+            if not response:
+                return None
+            
+            soup = BeautifulSoup(response.text, 'html.parser')
+            content_selectors = ['article', '.post-content', '.entry-content', '.article-content']
+            
+            for selector in content_selectors:
+                content_elem = soup.select_one(selector)
+                if content_elem:
+                    for tag in content_elem.select('.advertisement, .related-posts, .comments, .social-share'):
+                        tag.decompose()
+                    return content_elem.text.strip()
+            
+            return None
+        except Exception as e:
+            self.logger.error(f"본문 추출 중 오류: {e}")
+            return None
+    
+    async def _extract_content_async(self, url: str) -> Optional[str]:
+        try:
+            response_text = await safe_request_async(url)
+            if not response_text:
+                return None
+            
+            soup = BeautifulSoup(response_text, 'html.parser')
+            content_selectors = ['article', '.post-content', '.entry-content', '.article-content']
+            
+            for selector in content_selectors:
+                content_elem = soup.select_one(selector)
+                if content_elem:
+                    for tag in content_elem.select('.advertisement, .related-posts, .comments, .social-share'):
+                        tag.decompose()
+                    return content_elem.text.strip()
+            
+            return None
+        except Exception as e:
+            self.logger.error(f"본문 추출 중 오류: {e}")
+            return None
+    
+    async def _extract_article_async(self, title: str, link: str) -> Dict[str, str]:
+        content = await self._extract_content_async(link)
+        if not content:
+            content = f"제목: {title}\n\n내용을 가져올 수 없습니다."
+        
+        return {
+            'title': title,
+            'content': content,
+            'url': link,
+            'source': self.source_name.lower()
+        }
+
+
+class NineToFiveMacScraper(NewsScraperBase):
+    def __init__(self):
+        super().__init__("https://9to5mac.com", "9to5mac")
+
+
+class MacRumorsScraper(NewsScraperBase):
+    def __init__(self):
+        super().__init__("https://www.macrumors.com", "macrumors")
+
+
+def fetch_9to5mac_news() -> List[Dict[str, str]]:
+    scraper = NineToFiveMacScraper()
+    return scraper.scrape_news()
+
+
+def fetch_macrumors_news() -> List[Dict[str, str]]:
+    scraper = MacRumorsScraper()
+    return scraper.scrape_news()
+
+
+async def fetch_9to5mac_news_async() -> List[Dict[str, str]]:
+    scraper = NineToFiveMacScraper()
+    return await scraper.scrape_news_async()
+
+
+async def fetch_macrumors_news_async() -> List[Dict[str, str]]:
+    scraper = MacRumorsScraper()
+    return await scraper.scrape_news_async()
