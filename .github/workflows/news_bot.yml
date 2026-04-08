@@ -2,9 +2,11 @@ name: Daily News Bot
 
 on:
   schedule:
-    # 매일 오전 11시 EST (UTC-5)에 실행
-    - cron: "0 16 * * *" # UTC 16:00 = EST 11:00
-  workflow_dispatch: # 수동 실행 옵션 추가
+    # 뉴욕 오후 12시 기준 (DST 자동 적용 불가 — 수동 전환 필요)
+    # EDT (3월~11월, UTC-4): 0 16 * * *  ← 현재 적용
+    # EST (11월~3월, UTC-5): 0 17 * * *  ← 겨울에 이 줄로 교체
+    - cron: "0 16 * * *"
+  workflow_dispatch:
 
 jobs:
   run-news-bot:

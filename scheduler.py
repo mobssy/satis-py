@@ -17,8 +17,8 @@ def job():
 
 def run_scheduler():
     """스케줄러 실행 (시스템 시간 기준 매일 11:00 EST)"""
-    schedule.every().day.at("11:00").do(job)
-    logger.info("스케줄러 시작: 매일 11:00 EST 실행")
+    schedule.every().day.at("12:00").do(job)
+    logger.info("스케줄러 시작: 매일 12:00 뉴욕 시간 실행")
 
     while True:
         try:
