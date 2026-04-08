@@ -21,9 +21,9 @@
  
 I live between two worlds — Korea and the US.
  
-Every morning, I found myself jumping between five different tabs: Korean news, New York local news, New Jersey updates, Big Tech headlines, and anything Apple-related. It was fragmented, slow, and honestly exhausting.
+Every morning, I found myself jumping between six different tabs: Korean news, New York local news, New Jersey updates, Big Tech headlines, Apple-related news, and global top stories. It was fragmented, slow, and honestly exhausting.
  
-So I built Satis-py. One bot. Five categories. Five stories each. Summarized by AI. In my Telegram. Every day at noon.
+So I built Satis-py. One bot. Six categories. Five stories each. Summarized by AI. In my Telegram. Every day at noon.
  
 The name is simple: **Satisfy** + **Python** = **Satis-py**.
 Because staying informed should feel good — not like a chore.
@@ -34,7 +34,7 @@ Because staying informed should feel good — not like a chore.
  
 Every day at **12:00 PM**, Satis-py automatically:
  
-1. Fetches the hottest headlines across 5 categories
+1. Fetches the hottest headlines across 6 categories
 2. Summarizes each story into one clean line using OpenAI
 3. Delivers everything to Telegram — formatted and ready to read
  
@@ -59,9 +59,9 @@ Every day at **12:00 PM**, Satis-py automatically:
  
 **Categories covered:**
  
-| 🇰🇷 Korea | 🗽 New York | 🌿 New Jersey | 💻 Big Tech | 🍎 Apple |
-|:---:|:---:|:---:|:---:|:---:|
-| Top 5 | Top 5 | Top 5 | Top 5 | Top 5 |
+| World | Korea | New York | New Jersey | Big Tech | Apple |
+|:---:|:---:|:---:|:---:|:---:|:---:|
+| Top 5 | Top 5 | Top 5 | Top 5 | Top 5 | Top 5 |
  
 ---
  
@@ -160,9 +160,9 @@ MIT
  
 저는 한국과 미국, 두 세계를 오가며 살고 있습니다.
  
-매일 아침마다 탭을 다섯 개씩 열었어요. 한국 뉴스, 뉴욕 로컬 뉴스, 뉴저지 소식, 빅테크 헤드라인, 그리고 Apple 관련 뉴스. 파편화되고, 느리고, 솔직히 피곤했습니다.
+매일 아침마다 탭을 여섯 개씩 열었어요. 한국 뉴스, 뉴욕 로컬 뉴스, 뉴저지 소식, 빅테크 헤드라인, Apple 관련 뉴스, 그리고 세계 빅뉴스. 파편화되고, 느리고, 솔직히 피곤했습니다.
  
-그래서 Satis-py를 만들었습니다. 봇 하나. 카테고리 다섯 개. 카테고리별 뉴스 다섯 개. AI 요약. 텔레그램으로. 매일 정오에.
+그래서 Satis-py를 만들었습니다. 봇 하나. 카테고리 여섯 개. 카테고리별 뉴스 다섯 개. AI 요약. 텔레그램으로. 매일 정오에.
  
 이름은 간단합니다: **Satisfy**(만족) + **Python** = **Satis-py**.
 정보를 얻는 게 즐거워야 하니까요 — 부담이 아니라.
@@ -173,7 +173,7 @@ MIT
  
 매일 **오후 12시**, Satis-py가 자동으로:
  
-1. 5개 카테고리에서 가장 핫한 헤드라인 수집
+1. 6개 카테고리에서 가장 핫한 헤드라인 수집
 2. OpenAI로 각 뉴스를 한 줄로 요약
 3. 텔레그램으로 깔끔하게 포맷해서 전송
  
@@ -198,9 +198,9 @@ MIT
  
 **커버하는 카테고리:**
  
-| 🇰🇷 한국 | 🗽 뉴욕 | 🌿 뉴저지 | 💻 빅테크 | 🍎 애플 |
-|:---:|:---:|:---:|:---:|:---:|
-| 상위 5개 | 상위 5개 | 상위 5개 | 상위 5개 | 상위 5개 |
+| 세계 | 한국 | 뉴욕 | 뉴저지 | 빅테크 | 애플 |
+|:---:|:---:|:---:|:---:|:---:|:---:|
+| 상위 5개 | 상위 5개 | 상위 5개 | 상위 5개 | 상위 5개 | 상위 5개 |
  
 ---
  
