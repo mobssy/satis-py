@@ -38,7 +38,7 @@ def summarize_article(text):
         #              0에 가까울수록 더 결정적이고 일관된 답변을 생성하며,
         #              1에 가까울수록 다양하고 창의적인 답변을 생성합니다.
         response = openai.chat.completions.create(
-            model="gpt-3.5-turbo",
+            model="gpt-4o-mini",
             messages=[
                 {"role": "system", "content": "너는 뉴스 요약 전문가야. 반드시 한글로만 답변해."},
                 {"role": "user", "content": prompt}
