@@ -1,11 +1,8 @@
-# config.py
+import os
+from dotenv import load_dotenv
 
-# Telegram Bot 설정
-TELEGRAM_BOT_TOKEN = "***REMOVED_TELEGRAM_TOKEN***"
-TELEGRAM_CHAT_ID = "7417432162"  # 개인이면 숫자, 그룹이면 -100부터 시작
+load_dotenv()
 
-# OpenAI API Key (새로 추가하거나 업데이트)
-OPENAI_API_KEY = "***REMOVED_OPENAI_KEY***"
-
-def summarize_article(text):
-    return "요약 기능이 일시적으로 중단되었습니다."
+TELEGRAM_BOT_TOKEN = os.environ["TELEGRAM_BOT_TOKEN"]
+TELEGRAM_CHAT_ID = os.environ["TELEGRAM_CHAT_ID"]
+OPENAI_API_KEY = os.environ["OPENAI_API_KEY"]
