@@ -20,14 +20,7 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-_NUMBER_EMOJIS = ['1️⃣', '2️⃣', '3️⃣', '4️⃣', '5️⃣', '6️⃣', '7️⃣', '8️⃣', '9️⃣']
-
-def _format_kst_time() -> str:
-    """KST 기준 현재 시간을 오전/오후 형식으로 반환"""
-    kst = datetime.now(ZoneInfo('Asia/Seoul'))
-    period = "오전" if kst.hour < 12 else "오후"
-    hour = kst.hour % 12 or 12
-    return kst.strftime(f"%Y.%m.%d ") + f"{period} {hour}:{kst.minute:02d}"
+_NUMBER_EMOJIS = ['1️⃣', '2️⃣', '3️⃣', '4️⃣', '5️⃣', '6️⃣', '7️⃣', '8️⃣', '9️⃣', '🔟']
 
 def is_tuesday() -> bool:
     """오늘이 화요일(EST 기준)인지 확인"""
@@ -59,7 +52,7 @@ def create_news_message(news_list: list, news_type: str, emoji: str) -> str | No
 
         logger.info(f"전송될 {news_type} 뉴스: {len(filtered_news)}개")
 
-        lines = [f"📰 {emoji} {news_type} 뉴스 브리핑\n"]
+        lines = ["📰 오늘의 뉴스 브리핑\n"]
 
         for i, article in enumerate(filtered_news):
             try:
@@ -71,7 +64,6 @@ def create_news_message(news_list: list, news_type: str, emoji: str) -> str | No
                 logger.error(f"{news_type} 뉴스 기사 처리 중 오류 발생: {e}")
                 continue
 
-        lines.append(f"🕐 {_format_kst_time()}")
         return "\n".join(lines)
 
     except Exception as e:
