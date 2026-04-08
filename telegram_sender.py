@@ -38,14 +38,14 @@ async def send_telegram_message(message: str) -> None:
         bot = Bot(token=TELEGRAM_BOT_TOKEN)
 
         if len(message) <= MAX_MESSAGE_LENGTH:
-            await bot.send_message(chat_id=TELEGRAM_CHAT_ID, text=message, parse_mode='MarkdownV2')
+            await bot.send_message(chat_id=TELEGRAM_CHAT_ID, text=message, parse_mode=None)
             logger.info("메시지 전송 완료")
             return
 
         parts = _split_message(message)
         for i, part in enumerate(parts, 1):
             text = f"[{i}/{len(parts)}]\n\n{part}" if len(parts) > 1 else part
-            await bot.send_message(chat_id=TELEGRAM_CHAT_ID, text=text, parse_mode='MarkdownV2')
+            await bot.send_message(chat_id=TELEGRAM_CHAT_ID, text=text, parse_mode=None)
             await asyncio.sleep(1)
 
         logger.info(f"메시지 전송 완료 ({len(parts)}파트)")

@@ -21,30 +21,20 @@ def summarize_article(text):
     # 프롬프트는 모델에게 무엇을 해야 하는지 지시하는 문장입니다.
     # 여기서는 뉴스 기사를 최대 10문장으로 한국어로 요약해달라는 요청을 포함합니다.
     prompt = (
-        "다음 뉴스 기사를 한국어로 간결하게 요약해줘. (최대 10문장, 반드시 한글로 답변해줘)\n\n"
-        f"{text}\n\n"
-        "요약:"
+        "다음 뉴스 기사를 한국어로 한 문장으로만 요약해줘. "
+        "반드시 한 문장, 한글로만 답변해. 앞에 '요약:' 같은 접두사 없이 바로 내용만 써줘.\n\n"
+        f"{text}"
     )
-    
+
     try:
-        # OpenAI의 chat completions API를 호출하여 요약을 생성합니다.
-        # model: 사용할 언어 모델을 지정합니다. 여기서는 'gpt-3.5-turbo'를 사용합니다.
-        # messages: 대화 형식으로 모델에 전달할 메시지 리스트입니다.
-        #           system 역할은 모델에게 역할과 행동 지침을 주고,
-        #           user 역할은 실제 요약 요청 내용을 담습니다.
-        # max_tokens: 생성할 최대 토큰 수를 지정합니다. 토큰은 문장 부호, 단어 단위 등으로 분할된 텍스트 단위입니다.
-        #             이 값을 높이면 더 긴 답변을 받을 수 있습니다.
-        # temperature: 생성되는 텍스트의 창의성 정도를 조절하는 값입니다.
-        #              0에 가까울수록 더 결정적이고 일관된 답변을 생성하며,
-        #              1에 가까울수록 다양하고 창의적인 답변을 생성합니다.
         response = openai.chat.completions.create(
             model="gpt-4o-mini",
             messages=[
-                {"role": "system", "content": "너는 뉴스 요약 전문가야. 반드시 한글로만 답변해."},
+                {"role": "system", "content": "너는 뉴스 요약 전문가야. 반드시 한 문장, 한글로만 답변해."},
                 {"role": "user", "content": prompt}
             ],
-            max_tokens=500, # 최대 500 토큰까지 답변을 생성하도록 설정
-            temperature=0.7 # 적당한 창의성을 가진 답변 생성
+            max_tokens=100,
+            temperature=0.5,
         )
         # API 응답에서 생성된 요약 텍스트를 추출하고 앞뒤 공백을 제거합니다.
         summary = response.choices[0].message.content.strip()
