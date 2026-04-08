@@ -15,7 +15,7 @@ openai.api_key = OPENAI_API_KEY
 def summarize_article(text):
     """
     주어진 뉴스 기사 텍스트를 한국어로 간결하게 요약하는 함수입니다.
-    OpenAI의 GPT-3.5 Turbo 모델을 사용하여 요약을 생성합니다.
+    OpenAI의 GPT-4o mini 모델을 사용하여 요약을 생성합니다.
     """
     # 요약을 요청하기 위한 프롬프트를 만듭니다.
     # 프롬프트는 모델에게 무엇을 해야 하는지 지시하는 문장입니다.
