@@ -76,43 +76,6 @@ Every day at **12:00 PM**, Satis-py automatically:
  
 ---
  
-## Getting Started
- 
-### 1. Clone
- 
-```bash
-git clone https://github.com/yourusername/satis-py.git
-cd satis-py
-```
- 
-### 2. Install dependencies
- 
-```bash
-pip install -r requirements.txt
-```
- 
-### 3. Configure environment
- 
-```bash
-cp .env.example .env
-```
- 
-```env
-OPENAI_API_KEY=your_openai_api_key
-TELEGRAM_BOT_TOKEN=your_telegram_bot_token
-TELEGRAM_CHAT_ID=your_chat_id
-```
- 
-### 4. Run
- 
-```bash
-python main.py
-```
- 
-Set it. Forget it. Get your briefing at noon.
- 
----
- 
 ## Project Structure
  
 ```
@@ -212,43 +175,6 @@ MIT
 | AI 요약 | OpenAI API (GPT-4o-mini) |
 | 메시징 | Telegram Bot API |
 | 스케줄링 | APScheduler |
- 
----
- 
-## 시작하기
- 
-### 1. 클론
- 
-```bash
-git clone https://github.com/yourusername/satis-py.git
-cd satis-py
-```
- 
-### 2. 의존성 설치
- 
-```bash
-pip install -r requirements.txt
-```
- 
-### 3. 환경변수 설정
- 
-```bash
-cp .env.example .env
-```
- 
-```env
-OPENAI_API_KEY=your_openai_api_key
-TELEGRAM_BOT_TOKEN=your_telegram_bot_token
-TELEGRAM_CHAT_ID=your_chat_id
-```
- 
-### 4. 실행
- 
-```bash
-python main.py
-```
- 
-설정 끝. 잊어버려도 됩니다. 정오에 브리핑이 도착합니다.
  
 ---
  
