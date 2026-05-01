@@ -93,7 +93,9 @@ satis-py/
  
 ## License
  
-Copyright (c) 2026 David Minkyu Song. All Rights Reserved.
+Copyright © 2026 David Song. All rights reserved.
+
+This source code is proprietary and confidential. Unauthorized copying, distribution, or use of this software, in whole or in part, is strictly prohibited.
  
 ---
  
@@ -194,4 +196,6 @@ satis-py/
  
 ## 라이선스
  
-Copyright (c) 2026 David Minkyu Song. All Rights Reserved.
+Copyright © 2026 David Song. All rights reserved.
+
+This source code is proprietary and confidential. Unauthorized copying, distribution, or use of this software, in whole or in part, is strictly prohibited.
