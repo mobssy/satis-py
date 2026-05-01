@@ -7,7 +7,6 @@
 ![Python](https://img.shields.io/badge/Python-3.11+-3776AB?style=flat-square&logo=python&logoColor=white)
 ![OpenAI](https://img.shields.io/badge/OpenAI-GPT--4o--mini-412991?style=flat-square&logo=openai&logoColor=white)
 ![Telegram](https://img.shields.io/badge/Telegram-Bot-26A5E4?style=flat-square&logo=telegram&logoColor=white)
-![License](https://img.shields.io/badge/License-MIT-22c55e?style=flat-square)
  
 <br />
  
@@ -94,7 +93,7 @@ satis-py/
  
 ## License
  
-MIT
+Copyright (c) 2026 David Minkyu Song. All Rights Reserved.
  
 ---
  
@@ -109,7 +108,6 @@ MIT
 ![Python](https://img.shields.io/badge/Python-3.11+-3776AB?style=flat-square&logo=python&logoColor=white)
 ![OpenAI](https://img.shields.io/badge/OpenAI-GPT--4o--mini-412991?style=flat-square&logo=openai&logoColor=white)
 ![Telegram](https://img.shields.io/badge/Telegram-Bot-26A5E4?style=flat-square&logo=telegram&logoColor=white)
-![License](https://img.shields.io/badge/License-MIT-22c55e?style=flat-square)
  
 <br />
  
@@ -196,4 +194,4 @@ satis-py/
  
 ## 라이선스
  
-MIT
+Copyright (c) 2026 David Minkyu Song. All Rights Reserved.
