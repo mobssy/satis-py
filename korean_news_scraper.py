@@ -86,7 +86,7 @@ def get_nate_news() -> list[dict]:
     return _fetch_korean_news(
         url="https://news.nate.com/",
         source="nate",
-        base_url="https:",
+        base_url="https://news.nate.com",
         list_selectors=['.mlt01', '.mlt02', '.mlt03', '.newsCont', '.mlt01 a', '.mlt02 a', '.mlt03 a'],
         content_selectors=['#articleCont', '.articleCont', '.article_view', '.article_body', '#newsEndContents'],
     )

@@ -16,9 +16,9 @@ def job():
         logger.error(f"작업 중 오류 발생: {e}")
 
 def run_scheduler():
-    """스케줄러 실행 (시스템 시간 기준 매일 11:00 EST)"""
+    """스케줄러 실행 (시스템 시간 기준 매일 12:00 실행 — 서버를 EST로 설정해야 뉴욕 정오에 동작)"""
     schedule.every().day.at("12:00").do(job)
-    logger.info("스케줄러 시작: 매일 12:00 뉴욕 시간 실행")
+    logger.info("스케줄러 시작: 매일 12:00 (시스템 시간 기준) 실행")
 
     while True:
         try:

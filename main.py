@@ -52,7 +52,7 @@ def create_news_message(news_list: list, news_type: str, emoji: str) -> str | No
 
         logger.info(f"전송될 {news_type} 뉴스: {len(filtered_news)}개")
 
-        lines = ["📰 오늘의 뉴스 브리핑\n"]
+        lines = [f"{emoji} 오늘의 뉴스 브리핑\n"]
 
         for i, article in enumerate(filtered_news):
             try:
