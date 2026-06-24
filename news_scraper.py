@@ -9,6 +9,7 @@ _TITLE_SELECTORS = ['h2', 'h3', '.title', '.entry-title']
 _CONTENT_SELECTORS = ['article', '.post-content', '.entry-content', '.article-content']
 _NOISE_SELECTORS = '.advertisement, .related-posts, .comments, .social-share'
 
+
 def _fetch_apple_site_news(url: str, source: str, base_url: str) -> list[dict]:
     """애플 뉴스 사이트 공통 스크래핑 로직"""
     articles = []
