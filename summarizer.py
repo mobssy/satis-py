@@ -30,4 +30,5 @@ def summarize_article(text: str) -> str:
         return summary
     except Exception as e:
         logger.error(f"[요약 실패] {e}")
-        return "요약 중 오류가 발생했습니다."
+        fallback = " ".join(text.split())[:150]
+        return f"{fallback}..." if len(fallback) == 150 else fallback

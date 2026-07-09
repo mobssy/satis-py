@@ -1,18 +1,19 @@
 import asyncio
-from telegram.ext import Application
+from telegram import Bot
 from config import TELEGRAM_BOT_TOKEN
 
 
 async def test_bot() -> None:
+    """텔레그램 봇 연결 확인 및 Chat ID 조회용 진단 스크립트"""
     try:
         print("봇 테스트 시작...")
-        application = Application.builder().token(TELEGRAM_BOT_TOKEN).build()
+        bot = Bot(token=TELEGRAM_BOT_TOKEN)
 
-        bot = await application.bot.get_me()
-        print(f"봇 이름: {bot.first_name}")
-        print(f"봇 사용자명: @{bot.username}")
+        bot_info = await bot.get_me()
+        print(f"봇 이름: {bot_info.first_name}")
+        print(f"봇 사용자명: @{bot_info.username}")
 
-        updates = await application.bot.get_updates()
+        updates = await bot.get_updates()
         if updates:
             print("\n최근 대화 내역:")
             for update in updates:

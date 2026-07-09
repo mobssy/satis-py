@@ -1,6 +1,7 @@
 import logging
 from bs4 import BeautifulSoup
 from http_client import safe_request
+from google_rss_scraper import fetch_google_rss_news
 
 logger = logging.getLogger(__name__)
 
@@ -78,7 +79,7 @@ def get_naver_news() -> list[dict]:
         source="naver",
         base_url="https://news.naver.com",
         list_selectors=['.cc_text_list li', '.newsnow_txarea li', '.newsnow_cont li', '.newsnow_cont a'],
-        content_selectors=['#articeBody', '#articleBodyContents', '.article_body', '.article_view', '#newsEndContents'],
+        content_selectors=['#dic_area', '#articeBody', '#articleBodyContents', '.article_body', '.article_view', '#newsEndContents'],
     )
 
 
@@ -94,40 +95,7 @@ def get_nate_news() -> list[dict]:
 
 def get_google_world_news() -> list[dict]:
     """구글 뉴스 RSS에서 세계 핫뉴스 수집"""
-    news_list = []
-    try:
-        url = 'https://news.google.com/rss/search?q=world+news&hl=en-US&gl=US&ceid=US:en'
-        response = safe_request(url)
-        if not response:
-            return news_list
-
-        soup = BeautifulSoup(response.content, 'xml')
-        for item in soup.find_all('item')[:5]:
-            try:
-                if not item.title or not item.link or not item.description:
-                    continue
-
-                title = item.title.text.strip()
-                link = item.link.text.strip()
-                summary = item.description.text.strip()
-
-                if not (title and link and summary):
-                    continue
-
-                news_list.append({
-                    'title': f"[세계] {title}",
-                    'url': link,
-                    'content': summary,
-                })
-
-            except Exception as e:
-                logger.error(f"구글 세계 뉴스 항목 처리 중 오류: {e}")
-
-    except Exception as e:
-        logger.error(f"구글 세계 뉴스 크롤링 중 오류: {e}")
-
-    logger.info(f"세계: {len(news_list)} articles found")
-    return news_list
+    return fetch_google_rss_news("world+news", "세계")
 
 
 if __name__ == "__main__":
