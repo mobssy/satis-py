@@ -47,6 +47,7 @@ Thumbs.db
 
 # Project specific
 news_bot.log
+sent_history.json
 
 # Environment variables (보안상 중요)
 .env

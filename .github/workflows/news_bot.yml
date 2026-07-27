@@ -25,6 +25,16 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
+      # 워크플로우 실행마다 새 체크아웃이라 로컬 파일이 남지 않으므로
+      # 전송 이력(sent_history.json)을 캐시로 실행 간에 이어붙인다.
+      - name: Restore sent article history
+        uses: actions/cache@v4
+        with:
+          path: sent_history.json
+          key: sent-history-${{ github.run_id }}
+          restore-keys: |
+            sent-history-
+
       - name: Run news bot
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}

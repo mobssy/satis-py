@@ -8,6 +8,7 @@ from us_news_scraper import get_nj_hot_news, get_ny_hot_news
 from bigtech_news_scraper import get_bigtech_news
 from telegram_sender import send_telegram_message
 from summarizer import summarize_article
+from seen_articles import filter_unseen, mark_as_sent
 
 logging.basicConfig(
     level=logging.INFO,
@@ -26,16 +27,19 @@ def is_tuesday() -> bool:
     """오늘이 화요일(EST 기준)인지 확인"""
     return datetime.now(ZoneInfo('US/Eastern')).weekday() == 1
 
-async def send_news_safely(message: str, news_type: str) -> None:
-    """뉴스 전송을 안전하게 처리하는 함수"""
+async def send_news_safely(message: str, news_type: str) -> bool:
+    """뉴스 전송을 안전하게 처리하는 함수. 전송 성공 여부를 반환한다."""
     try:
         if message:
             await send_telegram_message(message)
             logger.info(f"{news_type} 뉴스 전송 완료")
+            return True
         else:
             logger.warning(f"{news_type} 뉴스 메시지가 비어있습니다.")
+            return False
     except Exception as e:
         logger.error(f"{news_type} 뉴스 전송 중 오류 발생: {e}")
+        return False
 
 def create_news_message(news_list: list, news_type: str, emoji: str) -> str | None:
     """뉴스 메시지를 새 포맷으로 생성"""
@@ -59,7 +63,10 @@ def create_news_message(news_list: list, news_type: str, emoji: str) -> str | No
                 number_emoji = _NUMBER_EMOJIS[i] if i < len(_NUMBER_EMOJIS) else f"{i + 1}."
                 summary = summarize_article(article['content'])
                 lines.append(f"{number_emoji} {article['title']}")
-                lines.append(f"→ {summary}\n")
+                lines.append(f"→ {summary}")
+                if article.get('url'):
+                    lines.append(f"🔗 {article['url']}")
+                lines.append("")
             except Exception as e:
                 logger.error(f"{news_type} 뉴스 기사 처리 중 오류 발생: {e}")
                 continue
@@ -125,9 +132,22 @@ async def main():
         ]
 
         for news_list, news_type, emoji in news_configs:
-            if news_list:
-                message = create_news_message(news_list, news_type, emoji)
-                await send_news_safely(message, news_type)
+            if not news_list:
+                continue
+
+            unseen_news = filter_unseen(news_list)
+            skipped = len(news_list) - len(unseen_news)
+            if skipped:
+                logger.info(f"{news_type}: 최근에 이미 보낸 기사 {skipped}개 제외")
+
+            if not unseen_news:
+                logger.info(f"{news_type}: 새로 보낼 기사가 없습니다.")
+                continue
+
+            message = create_news_message(unseen_news, news_type, emoji)
+            sent = await send_news_safely(message, news_type)
+            if sent:
+                mark_as_sent(unseen_news)
 
         logger.info("모든 뉴스 전송 완료!")
 
