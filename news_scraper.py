@@ -2,6 +2,7 @@ import logging
 from urllib.parse import urljoin
 from bs4 import BeautifulSoup
 from http_client import safe_request
+from article import Article
 
 logger = logging.getLogger(__name__)
 
@@ -25,7 +26,7 @@ def _fetch_apple_site_news(
     base_url: str,
     content_selectors: list[str],
     max_items: int = 5,
-) -> list[dict]:
+) -> list[Article]:
     """애플 뉴스 사이트 공통 스크래핑 로직
 
     같은 기사가 큰 카드와 사이드바 카드로 중복 노출되므로 URL 기준으로 중복을 제거한다.
@@ -92,14 +93,14 @@ def _fetch_apple_site_news(
     return articles
 
 
-def fetch_9to5mac_news() -> list[dict]:
+def fetch_9to5mac_news() -> list[Article]:
     return _fetch_apple_site_news(
         "https://9to5mac.com", "9to5mac", "https://9to5mac.com",
         content_selectors=['.post-content', '.entry-content'],
     )
 
 
-def fetch_macrumors_news() -> list[dict]:
+def fetch_macrumors_news() -> list[Article]:
     return _fetch_apple_site_news(
         "https://www.macrumors.com", "macrumors", "https://www.macrumors.com",
         content_selectors=['.js-content', '[class*=ugc]'],

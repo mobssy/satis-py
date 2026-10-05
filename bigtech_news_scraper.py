@@ -1,5 +1,6 @@
 import re
 from google_rss_scraper import fetch_google_rss_news
+from article import Article
 
 _BIGTECH_KEYWORDS = "Apple OR Google OR Microsoft OR Amazon OR Meta OR Tesla OR NVIDIA OR OpenAI"
 
@@ -34,6 +35,6 @@ def _format_bigtech_title(title: str) -> str:
     return f"[BigTech] {title}"
 
 
-def get_bigtech_news() -> list[dict]:
+def get_bigtech_news() -> list[Article]:
     """구글 뉴스에서 빅테크 회사 관련 뉴스 5개 수집"""
     return fetch_google_rss_news(_BIGTECH_KEYWORDS, "빅테크", title_formatter=_format_bigtech_title)

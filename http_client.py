@@ -11,7 +11,7 @@ DEFAULT_HEADERS = {
     'Accept-Language': 'ko-KR,ko;q=0.9,en-US;q=0.8,en;q=0.7',
 }
 
-def safe_request(url: str, headers: dict = None, delay: float = 1, timeout: int = 30):
+def safe_request(url: str, headers: dict | None = None, delay: float = 1, timeout: int = 30):
     """안전한 HTTP GET 요청. 실패 시 None 반환."""
     try:
         request_headers = DEFAULT_HEADERS.copy()
@@ -37,7 +37,7 @@ def safe_request(url: str, headers: dict = None, delay: float = 1, timeout: int 
 
     return None
 
-def fetch_with_retry(url: str, max_retries: int = 3, headers: dict = None, delay: float = 1, timeout: int = 30):
+def fetch_with_retry(url: str, max_retries: int = 3, headers: dict | None = None, delay: float = 1, timeout: int = 30):
     """재시도 로직 포함 HTTP 요청. jitter 적용으로 thundering herd 방지."""
     for attempt in range(max_retries + 1):
         response = safe_request(url, headers, delay, timeout)

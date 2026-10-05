@@ -6,12 +6,13 @@ from telegram_sender import send_telegram_message
 from summarizer import BatchSummary, SummarizationError, fallback_summary, summarize_articles
 from seen_articles import filter_unseen, mark_as_sent
 from health_report import HealthReport
+from article import Article
 
 logger = logging.getLogger(__name__)
 
 _NUMBER_EMOJIS = ['1️⃣', '2️⃣', '3️⃣', '4️⃣', '5️⃣', '6️⃣', '7️⃣', '8️⃣', '9️⃣', '🔟']
 
-async def send_news_safely(message: str, news_type: str) -> bool:
+async def send_news_safely(message: str | None, news_type: str) -> bool:
     """뉴스 전송을 안전하게 처리하는 함수. 전송 성공 여부를 반환한다."""
     try:
         if message:
@@ -25,13 +26,13 @@ async def send_news_safely(message: str, news_type: str) -> bool:
         logger.error(f"{news_type} 뉴스 전송 중 오류 발생: {e}")
         return False
 
-def _format_title(article: dict) -> str:
+def _format_title(article: Article) -> str:
     """제목에 기사 링크를 건다 (텔레그램 HTML 모드)"""
     title = escape(article['title'])
     url = article.get('url')
     return f'<a href="{escape(url, quote=True)}">{title}</a>' if url else title
 
-def _summarize(articles: list[dict], report: HealthReport | None) -> BatchSummary:
+def _summarize(articles: list[Article], report: HealthReport | None) -> BatchSummary:
     """카테고리를 한 번에 요약. 실패하면 기사별 본문(없으면 제목) 앞부분으로 대체하고,
     결과를 기사 수만큼 report에 기록한다."""
     try:
@@ -49,7 +50,7 @@ def _summarize(articles: list[dict], report: HealthReport | None) -> BatchSummar
     return result
 
 def create_news_message(
-    news_list: list,
+    news_list: list[Article],
     news_type: str,
     emoji: str,
     report: HealthReport | None = None,

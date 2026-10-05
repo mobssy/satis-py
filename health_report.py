@@ -1,5 +1,6 @@
 from dataclasses import dataclass, field
 from html import escape
+from article import Article
 
 # 본문을 못 가져온 기사가 이 비율 이상이면 셀렉터가 깨진 것으로 보고 경고한다
 MISSING_BODY_ALERT_RATIO = 0.5
@@ -14,7 +15,7 @@ class HealthReport:
     summaries_total: int = 0
     summary_failures: list[str] = field(default_factory=list)
 
-    def record_source(self, category: str, source: str, articles: list[dict]) -> None:
+    def record_source(self, category: str, source: str, articles: list[Article]) -> None:
         if not articles:
             self.warnings.append(f"{category}/{source}: 기사 0개")
             return

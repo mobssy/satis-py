@@ -3,6 +3,7 @@ from urllib.parse import urljoin
 from bs4 import BeautifulSoup
 from http_client import safe_request
 from google_rss_scraper import fetch_google_rss_news
+from article import Article
 
 logger = logging.getLogger(__name__)
 
@@ -16,7 +17,7 @@ def _fetch_korean_news(
     content_selectors: list[str],
     title_selectors: list[str],
     max_items: int = 10,
-) -> list[dict]:
+) -> list[Article]:
     """한국 뉴스 사이트 공통 스크래핑 로직
 
     목록 항목은 <a> 자체이거나 <a>를 포함하는 요소일 수 있다.
@@ -84,7 +85,7 @@ def _fetch_korean_news(
     return articles
 
 
-def get_naver_news() -> list[dict]:
+def get_naver_news() -> list[Article]:
     return _fetch_korean_news(
         url="https://news.naver.com/",
         source="naver",
@@ -95,7 +96,7 @@ def get_naver_news() -> list[dict]:
     )
 
 
-def get_nate_news() -> list[dict]:
+def get_nate_news() -> list[Article]:
     return _fetch_korean_news(
         url="https://news.nate.com/",
         source="nate",
@@ -106,7 +107,7 @@ def get_nate_news() -> list[dict]:
     )
 
 
-def get_google_world_news() -> list[dict]:
+def get_google_world_news() -> list[Article]:
     """구글 뉴스 RSS에서 세계 핫뉴스 수집"""
     return fetch_google_rss_news("world+news", "세계")
 

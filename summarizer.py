@@ -5,6 +5,7 @@ from dataclasses import dataclass
 
 import openai
 from config import OPENAI_API_KEY
+from article import Article
 
 logger = logging.getLogger(__name__)
 
@@ -58,7 +59,7 @@ def _neutralize(text: str) -> str:
     return _DELIMITER_PATTERN.sub('[article', text)
 
 
-def _build_prompt(articles: list[dict]) -> str:
+def _build_prompt(articles: list[Article]) -> str:
     blocks = []
     for i, article in enumerate(articles):
         title = _neutralize(article['title'])
@@ -100,7 +101,7 @@ def parse_batch_response(raw: str | None, count: int) -> BatchSummary:
     return BatchSummary(summaries, duplicate_of)
 
 
-def summarize_articles(articles: list[dict]) -> BatchSummary:
+def summarize_articles(articles: list[Article]) -> BatchSummary:
     """카테고리의 기사들을 한 번의 API 호출로 요약하고 같은 사건을 다룬 기사를 표시한다.
 
     실패하면 SummarizationError를 던진다.

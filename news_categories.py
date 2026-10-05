@@ -5,6 +5,7 @@ from typing import Callable
 from zoneinfo import ZoneInfo
 
 from health_report import HealthReport
+from article import Article
 
 from news_scraper import fetch_9to5mac_news, fetch_macrumors_news
 from korean_news_scraper import get_naver_news, get_nate_news, get_google_world_news
@@ -13,7 +14,6 @@ from bigtech_news_scraper import get_bigtech_news
 
 logger = logging.getLogger(__name__)
 
-Article = dict
 ArticleFilter = Callable[[list[Article]], list[Article]]
 
 

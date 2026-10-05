@@ -2,6 +2,7 @@ import json
 import logging
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
+from article import Article
 
 logger = logging.getLogger(__name__)
 
@@ -40,13 +41,13 @@ def _save(history: dict[str, str]) -> None:
         logger.error(f"전송 이력 파일 저장 실패: {e}")
 
 
-def filter_unseen(articles: list[dict]) -> list[dict]:
+def filter_unseen(articles: list[Article]) -> list[Article]:
     """최근 전송 이력에 없는(=아직 안 보낸) 기사만 반환"""
     history = _load()
     return [a for a in articles if a.get('url') not in history]
 
 
-def mark_as_sent(articles: list[dict]) -> None:
+def mark_as_sent(articles: list[Article]) -> None:
     """전송한 기사들의 URL을 이력에 기록하고 오래된 항목은 정리"""
     history = _prune(_load())
     now = datetime.now(timezone.utc).isoformat()
