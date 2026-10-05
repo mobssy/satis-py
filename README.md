@@ -42,25 +42,32 @@ Every day at **12:00 PM**, Satis-py automatically:
  
 1️⃣ Headline
 → One-line AI summary
+🔗 Article link
  
 2️⃣ Headline
 → One-line AI summary
+🔗 Article link
  
 3️⃣ Headline
 → One-line AI summary
+🔗 Article link
  
 4️⃣ Headline
 → One-line AI summary
+🔗 Article link
  
 5️⃣ Headline
 → One-line AI summary
+🔗 Article link
 ```
  
 **Categories covered:**
  
 | World | Korea | New York | New Jersey | Big Tech | Apple |
 |:---:|:---:|:---:|:---:|:---:|:---:|
-| Top 5 | Top 5 | Top 5 | Top 5 | Top 5 | Top 5 |
+| Top 5 | Top 5 | Top 5 | Top 5 | Top 5 | Top 5 (Tuesdays) |
+
+Articles already sent in the last 7 days are skipped and replaced with the next-ranked stories.
  
 ---
  
@@ -71,7 +78,7 @@ Every day at **12:00 PM**, Satis-py automatically:
 | Language | Python 3.11+ |
 | AI Summarization | OpenAI API (GPT-4o-mini) |
 | Messaging | Telegram Bot API |
-| Scheduling | APScheduler |
+| Scheduling | GitHub Actions (cron) |
  
 ---
  
@@ -79,14 +86,22 @@ Every day at **12:00 PM**, Satis-py automatically:
  
 ```
 satis-py/
-├── main.py            ← Entry point & scheduler
-├── fetcher.py         ← News fetching
-├── summarizer.py      ← OpenAI summarization
-├── bot.py             ← Telegram delivery
-├── .env.example
-├── requirements.txt
-└── assets/
-    └── demo.gif
+├── main.py                   ← Entry point: collect → summarize → send
+├── news_categories.py        ← Category/source definitions & unseen-article collection
+├── google_rss_scraper.py     ← Shared Google News RSS scraper
+├── korean_news_scraper.py    ← Naver / Nate / world news
+├── us_news_scraper.py        ← New York / New Jersey news
+├── bigtech_news_scraper.py   ← Big Tech news
+├── news_scraper.py           ← Apple news (9to5Mac / MacRumors)
+├── http_client.py            ← HTTP requests with retry
+├── summarizer.py             ← OpenAI summarization
+├── telegram_sender.py        ← Telegram delivery
+├── message_splitter.py       ← Splits long messages to fit Telegram limits
+├── seen_articles.py          ← 7-day sent history to skip duplicates
+├── config.py                 ← Environment variable loading
+├── check_bot.py              ← Bot connection / Chat ID diagnostic
+├── test_*.py                 ← Unit tests
+└── .github/workflows/news_bot.yml  ← Daily run at noon New York time
 ```
  
 ---
@@ -145,25 +160,32 @@ This source code is proprietary and confidential. Unauthorized copying, distribu
  
 1️⃣ 뉴스 제목
 → AI 한 줄 요약
+🔗 기사 링크
  
 2️⃣ 뉴스 제목
 → AI 한 줄 요약
+🔗 기사 링크
  
 3️⃣ 뉴스 제목
 → AI 한 줄 요약
+🔗 기사 링크
  
 4️⃣ 뉴스 제목
 → AI 한 줄 요약
+🔗 기사 링크
  
 5️⃣ 뉴스 제목
 → AI 한 줄 요약
+🔗 기사 링크
 ```
  
 **커버하는 카테고리:**
  
 | 세계 | 한국 | 뉴욕 | 뉴저지 | 빅테크 | 애플 |
 |:---:|:---:|:---:|:---:|:---:|:---:|
-| 상위 5개 | 상위 5개 | 상위 5개 | 상위 5개 | 상위 5개 | 상위 5개 |
+| 상위 5개 | 상위 5개 | 상위 5개 | 상위 5개 | 상위 5개 | 상위 5개 (화요일) |
+
+최근 7일 안에 이미 보낸 기사는 건너뛰고 다음 순위 기사로 채웁니다.
  
 ---
  
@@ -174,7 +196,7 @@ This source code is proprietary and confidential. Unauthorized copying, distribu
 | 언어 | Python 3.11+ |
 | AI 요약 | OpenAI API (GPT-4o-mini) |
 | 메시징 | Telegram Bot API |
-| 스케줄링 | APScheduler |
+| 스케줄링 | GitHub Actions (cron) |
  
 ---
  
@@ -182,14 +204,22 @@ This source code is proprietary and confidential. Unauthorized copying, distribu
  
 ```
 satis-py/
-├── main.py            ← 진입점 & 스케줄러
-├── fetcher.py         ← 뉴스 수집
-├── summarizer.py      ← OpenAI 요약
-├── bot.py             ← 텔레그램 전송
-├── .env.example
-├── requirements.txt
-└── assets/
-    └── demo.gif
+├── main.py                   ← 진입점: 수집 → 요약 → 전송
+├── news_categories.py        ← 카테고리/소스 정의 & 미전송 기사 수집
+├── google_rss_scraper.py     ← 구글 뉴스 RSS 공통 스크래퍼
+├── korean_news_scraper.py    ← 네이버 / 네이트 / 세계 뉴스
+├── us_news_scraper.py        ← 뉴욕 / 뉴저지 뉴스
+├── bigtech_news_scraper.py   ← 빅테크 뉴스
+├── news_scraper.py           ← 애플 뉴스 (9to5Mac / MacRumors)
+├── http_client.py            ← 재시도 포함 HTTP 요청
+├── summarizer.py             ← OpenAI 요약
+├── telegram_sender.py        ← 텔레그램 전송
+├── message_splitter.py       ← 텔레그램 길이 제한에 맞춰 메시지 분할
+├── seen_articles.py          ← 7일 전송 이력으로 중복 기사 제외
+├── config.py                 ← 환경변수 로드
+├── check_bot.py              ← 봇 연결 / Chat ID 확인용 진단 스크립트
+├── test_*.py                 ← 유닛 테스트
+└── .github/workflows/news_bot.yml  ← 매일 뉴욕 시간 정오 실행
 ```
  
 ---
