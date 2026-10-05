@@ -59,7 +59,7 @@ Every day at **12:00 PM**, Satis-py automatically:
 | Top 5 | Top 5 | Top 5 | Top 5 | Top 5 | Top 5 (Tuesdays) |
 
 Articles already sent in the last 7 days are skipped and replaced with the next-ranked stories.
-If a source returns no articles or loses most article bodies (usually a site layout change), or most OpenAI summaries fail (e.g. exhausted credits), the bot also sends a "⚠️ 뉴스봇 점검 필요" alert.
+If a source returns no articles or loses most article bodies (usually a site layout change), or most OpenAI summaries fail (e.g. exhausted credits), the bot also sends a "⚠️ 뉴스봇 점검 필요" alert. If the run itself fails, a "🚨 뉴스봇 실행 실패" message with the run link is sent instead.
  
 ---
  
@@ -91,12 +91,15 @@ satis-py/
 ├── message_splitter.py       ← Splits long messages to fit Telegram limits
 ├── seen_articles.py          ← 7-day sent history to skip duplicates
 ├── health_report.py          ← Detects silently broken scrapers and builds alerts
+├── article.py                ← Article type shared across the pipeline
 ├── config.py                 ← Environment variable loading
 ├── check_bot.py              ← Bot connection / Chat ID diagnostic
 ├── test_*.py                 ← Unit tests
-└── .github/workflows/
-    ├── news_bot.yml          ← Daily run at noon New York time
-    └── tests.yml             ← Runs tests on every push
+└── .github/
+    ├── dependabot.yml        ← Weekly dependency update PRs
+    └── workflows/
+        ├── news_bot.yml      ← Daily run at noon New York time
+        └── tests.yml         ← Runs tests on every push
 ```
  
 ---
@@ -172,7 +175,7 @@ This source code is proprietary and confidential. Unauthorized copying, distribu
 | 상위 5개 | 상위 5개 | 상위 5개 | 상위 5개 | 상위 5개 | 상위 5개 (화요일) |
 
 최근 7일 안에 이미 보낸 기사는 건너뛰고 다음 순위 기사로 채웁니다.
-소스가 기사를 하나도 못 가져오거나 본문을 대부분 놓칠 때(대개 사이트 구조 변경), 또는 OpenAI 요약이 대부분 실패할 때(예: 크레딧 소진) "⚠️ 뉴스봇 점검 필요" 알림도 함께 보냅니다.
+소스가 기사를 하나도 못 가져오거나 본문을 대부분 놓칠 때(대개 사이트 구조 변경), 또는 OpenAI 요약이 대부분 실패할 때(예: 크레딧 소진) "⚠️ 뉴스봇 점검 필요" 알림도 함께 보냅니다. 실행 자체가 실패하면 실행 링크와 함께 "🚨 뉴스봇 실행 실패" 메시지를 보냅니다.
  
 ---
  
@@ -204,12 +207,15 @@ satis-py/
 ├── message_splitter.py       ← 텔레그램 길이 제한에 맞춰 메시지 분할
 ├── seen_articles.py          ← 7일 전송 이력으로 중복 기사 제외
 ├── health_report.py          ← 조용히 깨진 스크래퍼 감지 & 점검 알림 생성
+├── article.py                ← 파이프라인 전체에서 쓰는 기사 타입
 ├── config.py                 ← 환경변수 로드
 ├── check_bot.py              ← 봇 연결 / Chat ID 확인용 진단 스크립트
 ├── test_*.py                 ← 유닛 테스트
-└── .github/workflows/
-    ├── news_bot.yml          ← 매일 뉴욕 시간 정오 실행
-    └── tests.yml             ← push마다 테스트 실행
+└── .github/
+    ├── dependabot.yml        ← 주간 의존성 업데이트 PR
+    └── workflows/
+        ├── news_bot.yml      ← 매일 뉴욕 시간 정오 실행
+        └── tests.yml         ← push마다 테스트 실행
 ```
  
 ---
