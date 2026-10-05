@@ -62,10 +62,10 @@ jobs:
       cancel-in-progress: false
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v7
         with:
           python-version: "3.11"
 
@@ -77,7 +77,7 @@ jobs:
       # 워크플로우 실행마다 새 체크아웃이라 로컬 파일이 남지 않으므로
       # 전송 이력(sent_history.json)을 캐시로 실행 간에 이어붙인다.
       - name: Restore sent article history
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: sent_history.json
           key: sent-history-${{ github.run_id }}
