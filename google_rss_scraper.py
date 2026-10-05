@@ -12,12 +12,13 @@ def fetch_google_rss_news(
     query: str,
     label: str,
     title_formatter: Callable[[str], str] | None = None,
-    max_items: int = 5,
+    max_items: int = 15,
 ) -> list[dict]:
     """구글 뉴스 RSS에서 특정 쿼리의 뉴스 수집
 
     title_formatter를 지정하면 제목 포맷을 커스터마이징할 수 있고,
     지정하지 않으면 "[label] 제목" 형식을 사용한다.
+    이미 보낸 기사를 걸러낸 뒤에도 채울 수 있도록 넉넉하게 후보를 반환한다.
     """
     if title_formatter is None:
         title_formatter = lambda title: f"[{label}] {title}"

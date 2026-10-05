@@ -13,6 +13,7 @@ def _fetch_korean_news(
     base_url: str,
     list_selectors: list[str],
     content_selectors: list[str],
+    max_items: int = 10,
 ) -> list[dict]:
     """한국 뉴스 사이트 공통 스크래핑 로직"""
     articles = []
@@ -26,7 +27,7 @@ def _fetch_korean_news(
         for selector in list_selectors:
             items = soup.select(selector)
             if items:
-                news_items = items[:5]
+                news_items = items[:max_items]
                 break
 
         for item in news_items:

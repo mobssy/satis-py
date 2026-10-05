@@ -1,11 +1,6 @@
 import asyncio
 import logging
-from datetime import datetime
-from zoneinfo import ZoneInfo
-from news_scraper import fetch_9to5mac_news, fetch_macrumors_news
-from korean_news_scraper import get_naver_news, get_nate_news, get_google_world_news
-from us_news_scraper import get_nj_hot_news, get_ny_hot_news
-from bigtech_news_scraper import get_bigtech_news
+from news_categories import CATEGORIES, collect_unseen_articles
 from telegram_sender import send_telegram_message
 from summarizer import summarize_article
 from seen_articles import filter_unseen, mark_as_sent
@@ -22,10 +17,6 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 _NUMBER_EMOJIS = ['1️⃣', '2️⃣', '3️⃣', '4️⃣', '5️⃣', '6️⃣', '7️⃣', '8️⃣', '9️⃣', '🔟']
-
-def is_tuesday() -> bool:
-    """오늘이 화요일(EST 기준)인지 확인"""
-    return datetime.now(ZoneInfo('US/Eastern')).weekday() == 1
 
 async def send_news_safely(message: str, news_type: str) -> bool:
     """뉴스 전송을 안전하게 처리하는 함수. 전송 성공 여부를 반환한다."""
@@ -81,73 +72,20 @@ async def main():
     try:
         logger.info("뉴스 수집 시작...")
 
-        apple_news = []
-        if is_tuesday():
-            try:
-                apple_news.extend(fetch_9to5mac_news()[:3])
-                apple_news.extend(fetch_macrumors_news()[:2])
-                logger.info(f"애플 뉴스 {len(apple_news)}개 수집 완료")
-            except Exception as e:
-                logger.error(f"애플 뉴스 수집 중 오류 발생: {e}")
-        else:
-            logger.info("오늘은 화요일이 아니므로 애플 뉴스를 보내지 않습니다.")
-
-        korean_news = []
-        try:
-            korean_news.extend(get_naver_news())
-            korean_news.extend(get_nate_news())
-            korean_news = korean_news[:5]
-            logger.info(f"한국 뉴스 {len(korean_news)}개 수집 완료")
-        except Exception as e:
-            logger.error(f"한국 뉴스 수집 중 오류 발생: {e}")
-
-        world_news = []
-        try:
-            world_news = get_google_world_news()
-            logger.info(f"세계 뉴스 {len(world_news)}개 수집 완료")
-        except Exception as e:
-            logger.error(f"세계 뉴스 수집 중 오류 발생: {e}")
-
-        us_news = []
-        try:
-            us_news.extend(get_nj_hot_news())
-            us_news.extend(get_ny_hot_news())
-            logger.info(f"미국 뉴스 {len(us_news)}개 수집 완료")
-        except Exception as e:
-            logger.error(f"미국 뉴스 수집 중 오류 발생: {e}")
-
-        bigtech_news = []
-        try:
-            bigtech_news = get_bigtech_news()
-            logger.info(f"빅테크 뉴스 {len(bigtech_news)}개 수집 완료")
-        except Exception as e:
-            logger.error(f"빅테크 뉴스 수집 중 오류 발생: {e}")
-
-        news_configs = [
-            (apple_news, "애플", "📱"),
-            (korean_news, "한국", "🇰🇷"),
-            (world_news, "세계", "🌍"),
-            (us_news, "미국", "🇺🇸"),
-            (bigtech_news, "빅테크", "🏢"),
-        ]
-
-        for news_list, news_type, emoji in news_configs:
-            if not news_list:
+        for category in CATEGORIES:
+            if not category.is_active():
+                logger.info(f"{category.name}: 오늘은 전송 대상이 아니므로 건너뜁니다.")
                 continue
 
-            unseen_news = filter_unseen(news_list)
-            skipped = len(news_list) - len(unseen_news)
-            if skipped:
-                logger.info(f"{news_type}: 최근에 이미 보낸 기사 {skipped}개 제외")
-
-            if not unseen_news:
-                logger.info(f"{news_type}: 새로 보낼 기사가 없습니다.")
+            articles = collect_unseen_articles(category, filter_unseen)
+            logger.info(f"{category.name} 뉴스 {len(articles)}개 수집 완료")
+            if not articles:
+                logger.info(f"{category.name}: 새로 보낼 기사가 없습니다.")
                 continue
 
-            message = create_news_message(unseen_news, news_type, emoji)
-            sent = await send_news_safely(message, news_type)
-            if sent:
-                mark_as_sent(unseen_news)
+            message = create_news_message(articles, category.name, category.emoji)
+            if await send_news_safely(message, category.name):
+                mark_as_sent(articles)
 
         logger.info("모든 뉴스 전송 완료!")
 
