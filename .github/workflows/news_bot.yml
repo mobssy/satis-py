@@ -8,12 +8,27 @@ on:
     - cron: "0 17 * * *" # EST (UTC-5)
   workflow_dispatch:
 
+# 기본은 읽기 전용, 필요한 잡에서만 권한을 추가한다
+permissions:
+  contents: read
+
 jobs:
   check-schedule:
     runs-on: ubuntu-latest
+    permissions:
+      actions: write
     outputs:
       run: ${{ steps.gate.outputs.run }}
     steps:
+      # 공개 저장소는 60일간 커밋이 없으면 예약 워크플로가 자동 비활성화된다.
+      # 봇은 커밋을 만들지 않으므로 실행할 때마다 워크플로를 다시 활성화해 타이머를 초기화한다.
+      - name: Keep schedule alive
+        continue-on-error: true # 실패해도 오늘 실행은 막지 않는다
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+        run: gh api -X PUT "repos/$REPO/actions/workflows/news_bot.yml/enable"
+
       # 실행이 지연돼도 판정이 바뀌지 않도록 현재 시각이 아니라 트리거된 cron으로 판단한다.
       - name: Check New York noon
         id: gate
@@ -41,6 +56,10 @@ jobs:
     needs: check-schedule
     if: needs.check-schedule.outputs.run == 'true'
     runs-on: ubuntu-latest
+    # 수동 실행과 예약 실행이 겹치면 같은 이력을 복원해 중복 전송할 수 있으므로 한 번에 하나만 실행
+    concurrency:
+      group: daily-news-bot
+      cancel-in-progress: false
 
     steps:
       - uses: actions/checkout@v4
@@ -71,3 +90,17 @@ jobs:
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         run: python main.py
+
+      # 의존성 설치 실패, import 오류, 실행 중 예외 등 어떤 단계가 실패해도 텔레그램으로 알린다
+      - name: Notify failure
+        if: failure()
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          curl -fsS --retry 2 -o /dev/null \
+            "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
+            --data-urlencode "chat_id=${TELEGRAM_CHAT_ID}" \
+            --data-urlencode "text=🚨 뉴스봇 실행 실패 — 오늘 브리핑이 전송되지 않았을 수 있습니다.
+          ${RUN_URL}"
