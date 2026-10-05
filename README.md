@@ -8,10 +8,6 @@
 ![OpenAI](https://img.shields.io/badge/OpenAI-GPT--4o--mini-412991?style=flat-square&logo=openai&logoColor=white)
 ![Telegram](https://img.shields.io/badge/Telegram-Bot-26A5E4?style=flat-square&logo=telegram&logoColor=white)
  
-<br />
- 
-![Satis-py demo](assets/demo.gif)
- 
 </div>
  
 ---
@@ -125,10 +121,6 @@ This source code is proprietary and confidential. Unauthorized copying, distribu
 ![Python](https://img.shields.io/badge/Python-3.11+-3776AB?style=flat-square&logo=python&logoColor=white)
 ![OpenAI](https://img.shields.io/badge/OpenAI-GPT--4o--mini-412991?style=flat-square&logo=openai&logoColor=white)
 ![Telegram](https://img.shields.io/badge/Telegram-Bot-26A5E4?style=flat-square&logo=telegram&logoColor=white)
- 
-<br />
- 
-![Satis-py demo](assets/demo.gif)
  
 </div>
  
