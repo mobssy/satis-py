@@ -1,4 +1,5 @@
 import logging
+from urllib.parse import urljoin
 from bs4 import BeautifulSoup
 from http_client import safe_request
 from google_rss_scraper import fetch_google_rss_news
@@ -13,9 +14,14 @@ def _fetch_korean_news(
     base_url: str,
     list_selectors: list[str],
     content_selectors: list[str],
+    title_selectors: list[str],
     max_items: int = 10,
 ) -> list[dict]:
-    """한국 뉴스 사이트 공통 스크래핑 로직"""
+    """한국 뉴스 사이트 공통 스크래핑 로직
+
+    목록 항목은 <a> 자체이거나 <a>를 포함하는 요소일 수 있다.
+    제목은 title_selectors로 찾고, 없으면 링크 텍스트를 사용한다.
+    """
     articles = []
     try:
         response = safe_request(url)
@@ -32,15 +38,18 @@ def _fetch_korean_news(
 
         for item in news_items:
             try:
-                link_elem = item.find('a')
+                link_elem = item if item.name == 'a' else item.find('a')
                 if not link_elem or 'href' not in link_elem.attrs:
                     continue
 
-                link = link_elem['href']
-                if not link.startswith('http'):
-                    link = base_url + link
+                # "//host/path" 같은 프로토콜 상대 경로도 올바르게 합친다
+                link = urljoin(base_url, link_elem['href'])
 
-                title = link_elem.text.strip()
+                title_elem = next(
+                    (item.select_one(s) for s in title_selectors if item.select_one(s)),
+                    link_elem,
+                )
+                title = title_elem.get_text(' ', strip=True)
                 if not title:
                     continue
 
@@ -71,6 +80,7 @@ def _fetch_korean_news(
     except Exception as e:
         logger.error(f"{source} 크롤링 중 오류: {e}")
 
+    logger.info(f"{source}: {len(articles)} articles found")
     return articles
 
 
@@ -79,8 +89,9 @@ def get_naver_news() -> list[dict]:
         url="https://news.naver.com/",
         source="naver",
         base_url="https://news.naver.com",
-        list_selectors=['.cc_text_list li', '.newsnow_txarea li', '.newsnow_cont li', '.newsnow_cont a'],
-        content_selectors=['#dic_area', '#articeBody', '#articleBodyContents', '.article_body', '.article_view', '#newsEndContents'],
+        list_selectors=['.cjs_nf_list a.cjs_nf_a'],
+        content_selectors=['#dic_area', '#newsct_article'],
+        title_selectors=['.cn_title'],
     )
 
 
@@ -89,8 +100,9 @@ def get_nate_news() -> list[dict]:
         url="https://news.nate.com/",
         source="nate",
         base_url="https://news.nate.com",
-        list_selectors=['.mlt01', '.mlt02', '.mlt03', '.newsCont', '.mlt01 a', '.mlt02 a', '.mlt03 a'],
-        content_selectors=['#articleCont', '.articleCont', '.article_view', '.article_body', '#newsEndContents'],
+        list_selectors=['.mlt01'],
+        content_selectors=['#realArtcContents', '#articleCont'],
+        title_selectors=['.tit'],
     )
 
 
