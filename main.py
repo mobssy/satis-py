@@ -1,5 +1,6 @@
 import asyncio
 import logging
+from html import escape
 from news_categories import CATEGORIES, collect_unseen_articles
 from telegram_sender import send_telegram_message
 from summarizer import summarize_article
@@ -33,8 +34,14 @@ async def send_news_safely(message: str, news_type: str) -> bool:
         logger.error(f"{news_type} 뉴스 전송 중 오류 발생: {e}")
         return False
 
+def _format_title(article: dict) -> str:
+    """제목에 기사 링크를 건다 (텔레그램 HTML 모드)"""
+    title = escape(article['title'])
+    url = article.get('url')
+    return f'<a href="{escape(url, quote=True)}">{title}</a>' if url else title
+
 def create_news_message(news_list: list, news_type: str, emoji: str) -> str | None:
-    """뉴스 메시지를 새 포맷으로 생성"""
+    """뉴스 메시지를 텔레그램 HTML 포맷으로 생성"""
     if not news_list:
         return None
 
@@ -55,10 +62,8 @@ def create_news_message(news_list: list, news_type: str, emoji: str) -> str | No
                 number_emoji = _NUMBER_EMOJIS[i] if i < len(_NUMBER_EMOJIS) else f"{i + 1}."
                 # 본문을 못 가져온 기사는 제목을 대신 요약한다
                 summary = summarize_article(article.get('content') or article['title'])
-                lines.append(f"{number_emoji} {article['title']}")
-                lines.append(f"→ {summary}")
-                if article.get('url'):
-                    lines.append(f"🔗 {article['url']}")
+                lines.append(f"{number_emoji} {_format_title(article)}")
+                lines.append(f"→ {escape(summary)}")
                 lines.append("")
             except Exception as e:
                 logger.error(f"{news_type} 뉴스 기사 처리 중 오류 발생: {e}")

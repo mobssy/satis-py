@@ -1,6 +1,6 @@
 import unittest
 
-from message_splitter import split_message
+from message_splitter import split_message, visible_length
 
 
 class SplitMessageTest(unittest.TestCase):
@@ -29,6 +29,16 @@ class SplitMessageTest(unittest.TestCase):
         parts = split_message("x" * 9 + "\ny", 10)
 
         self.assertEqual(parts, ["x" * 9 + "\n", "y\n"])
+
+
+class VisibleLengthTest(unittest.TestCase):
+    def test_excludes_tags_and_link_urls(self):
+        html = '<a href="https://news.google.com/very/long/url">제목</a>'
+
+        self.assertEqual(visible_length(html), 2)
+
+    def test_counts_escaped_entities_as_single_characters(self):
+        self.assertEqual(visible_length("A &lt; B &amp; C"), 9)
 
 
 if __name__ == "__main__":

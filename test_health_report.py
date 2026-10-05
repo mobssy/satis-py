@@ -34,6 +34,12 @@ class HealthReportTest(unittest.TestCase):
 
         self.assertIn("세계/get_google_world_news: 오류 - boom", report.format_alert())
 
+    def test_escapes_html_in_alert(self):
+        report = HealthReport()
+        report.record_error("세계", "get_google_world_news", RuntimeError("<urlopen error>"))
+
+        self.assertIn("&lt;urlopen error&gt;", report.format_alert())
+
 
 if __name__ == "__main__":
     unittest.main()
