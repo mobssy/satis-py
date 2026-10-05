@@ -1,7 +1,8 @@
 import unittest
 from unittest.mock import MagicMock, patch
 
-from korean_news_scraper import get_nate_news, get_naver_news
+from korean_news_scraper import get_google_korea_news, get_nate_news, get_naver_news
+from news_categories import CATEGORIES
 
 _NATE_HOME = """
 <div class="mlt01">
@@ -81,6 +82,27 @@ class NaverNewsTest(unittest.TestCase):
     @patch("korean_news_scraper.safe_request", return_value=None)
     def test_returns_empty_list_when_homepage_fails(self, _mock_request):
         self.assertEqual(get_naver_news(), [])
+
+
+class GoogleKoreaNewsTest(unittest.TestCase):
+    @patch("korean_news_scraper.fetch_google_rss_news", return_value=[])
+    def test_requests_korean_top_stories_without_label_prefix(self, mock_fetch):
+        get_google_korea_news()
+
+        args, kwargs = mock_fetch.call_args
+        self.assertIsNone(args[0])
+        self.assertEqual(kwargs["locale"].ceid, "KR:ko")
+        self.assertEqual(kwargs["title_formatter"]("제목 - 한겨레"), "제목 - 한겨레")
+
+
+class KoreanCategoryTest(unittest.TestCase):
+    def test_google_korea_is_the_last_fallback_source(self):
+        korean = next(c for c in CATEGORIES if c.name == "한국")
+
+        self.assertEqual(
+            [s.fetch.__name__ for s in korean.sources],
+            ["get_naver_news", "get_nate_news", "get_google_korea_news"],
+        )
 
 
 if __name__ == "__main__":

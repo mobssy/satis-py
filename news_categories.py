@@ -8,7 +8,7 @@ from health_report import HealthReport
 from article import Article
 
 from news_scraper import fetch_9to5mac_news, fetch_macrumors_news
-from korean_news_scraper import get_naver_news, get_nate_news, get_google_world_news
+from korean_news_scraper import get_naver_news, get_nate_news, get_google_korea_news, get_google_world_news
 from us_news_scraper import get_nj_hot_news, get_ny_hot_news
 from bigtech_news_scraper import get_bigtech_news
 
@@ -84,7 +84,8 @@ CATEGORIES: tuple[NewsCategory, ...] = (
     NewsCategory(
         name="한국",
         emoji="🇰🇷",
-        sources=(NewsSource(get_naver_news, 5), NewsSource(get_nate_news, 5)),
+        # 구글 한국판 RSS는 네이버/네이트로 5개가 안 찰 때만 호출되는 예비 소스
+        sources=(NewsSource(get_naver_news, 5), NewsSource(get_nate_news, 5), NewsSource(get_google_korea_news, 5)),
         limit=5,
     ),
     NewsCategory(

@@ -2,7 +2,7 @@ import logging
 from urllib.parse import urljoin
 from bs4 import BeautifulSoup
 from http_client import safe_request
-from google_rss_scraper import fetch_google_rss_news
+from google_rss_scraper import KOREA_KOREAN, fetch_google_rss_news
 from article import Article
 
 logger = logging.getLogger(__name__)
@@ -105,6 +105,14 @@ def get_nate_news() -> list[Article]:
         content_selectors=['#realArtcContents', '#articleCont'],
         title_selectors=['.tit'],
     )
+
+
+def get_google_korea_news() -> list[Article]:
+    """구글 뉴스 한국판 주요 뉴스. 사이트 구조 변경에 영향받지 않는 RSS라 네이버/네이트의 예비 소스로 쓴다.
+
+    네이버/네이트 기사와 같은 형식이 되도록 제목에 라벨을 붙이지 않는다.
+    """
+    return fetch_google_rss_news(None, "구글 한국", title_formatter=lambda title: title, locale=KOREA_KOREAN)
 
 
 def get_google_world_news() -> list[Article]:

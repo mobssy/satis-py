@@ -1,7 +1,7 @@
 import unittest
 from unittest.mock import MagicMock, patch
 
-from google_rss_scraper import fetch_google_rss_news
+from google_rss_scraper import KOREA_KOREAN, US_ENGLISH, _build_url, fetch_google_rss_news
 
 _RSS = b"""<?xml version="1.0" encoding="UTF-8"?>
 <rss><channel>
@@ -33,6 +33,20 @@ class FetchGoogleRssNewsTest(unittest.TestCase):
     @patch("google_rss_scraper.fetch_with_retry", return_value=None)
     def test_returns_empty_list_when_request_fails(self, _mock_fetch):
         self.assertEqual(fetch_google_rss_news("query", "테스트"), [])
+
+
+class BuildUrlTest(unittest.TestCase):
+    def test_search_url_for_query(self):
+        self.assertEqual(
+            _build_url("new+york", US_ENGLISH),
+            "https://news.google.com/rss/search?q=new+york&hl=en-US&gl=US&ceid=US:en",
+        )
+
+    def test_top_stories_url_without_query(self):
+        self.assertEqual(
+            _build_url(None, KOREA_KOREAN),
+            "https://news.google.com/rss?hl=ko&gl=KR&ceid=KR:ko",
+        )
 
 
 if __name__ == "__main__":
