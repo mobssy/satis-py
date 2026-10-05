@@ -2,6 +2,7 @@ import asyncio
 import logging
 from telegram import Bot
 from config import TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID
+from message_splitter import split_message
 
 logger = logging.getLogger(__name__)
 
@@ -10,31 +11,6 @@ MAX_MESSAGE_LENGTH = 4096
 _PART_PREFIX_RESERVE = 16
 
 _bot = Bot(token=TELEGRAM_BOT_TOKEN)
-
-
-def _split_message(message: str, limit: int) -> list[str]:
-    """메시지를 limit자 이하의 파트로 분할"""
-    parts = []
-    current_part = ""
-
-    for line in message.split('\n'):
-        while len(line) > limit:
-            if current_part:
-                parts.append(current_part)
-                current_part = ""
-            parts.append(line[:limit])
-            line = line[limit:]
-
-        if len(current_part) + len(line) + 1 > limit:
-            parts.append(current_part)
-            current_part = ""
-
-        current_part += line + '\n'
-
-    if current_part.strip():
-        parts.append(current_part)
-
-    return parts
 
 
 async def send_telegram_message(message: str) -> None:
@@ -46,7 +22,7 @@ async def send_telegram_message(message: str) -> None:
         logger.info("메시지 전송 완료")
         return
 
-    parts = _split_message(message, MAX_MESSAGE_LENGTH - _PART_PREFIX_RESERVE)
+    parts = split_message(message, MAX_MESSAGE_LENGTH - _PART_PREFIX_RESERVE)
     for i, part in enumerate(parts, 1):
         text = f"[{i}/{len(parts)}]\n\n{part}" if len(parts) > 1 else part
         await _bot.send_message(chat_id=TELEGRAM_CHAT_ID, text=text, parse_mode=None)
