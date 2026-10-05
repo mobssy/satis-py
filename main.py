@@ -3,7 +3,7 @@ import logging
 from html import escape
 from news_categories import CATEGORIES, collect_unseen_articles
 from telegram_sender import send_telegram_message
-from summarizer import summarize_article
+from summarizer import SummarizationError, fallback_summary, summarize_article
 from seen_articles import filter_unseen, mark_as_sent
 from health_report import HealthReport
 
@@ -40,7 +40,24 @@ def _format_title(article: dict) -> str:
     url = article.get('url')
     return f'<a href="{escape(url, quote=True)}">{title}</a>' if url else title
 
-def create_news_message(news_list: list, news_type: str, emoji: str) -> str | None:
+def _summarize(text: str, report: HealthReport | None) -> str:
+    """요약에 실패하면 본문 앞부분으로 대체하고, 결과를 report에 기록한다"""
+    try:
+        summary = summarize_article(text)
+        failure_reason = None
+    except SummarizationError as e:
+        summary = fallback_summary(text)
+        failure_reason = e.reason
+    if report:
+        report.record_summary(failure_reason)
+    return summary
+
+def create_news_message(
+    news_list: list,
+    news_type: str,
+    emoji: str,
+    report: HealthReport | None = None,
+) -> str | None:
     """뉴스 메시지를 텔레그램 HTML 포맷으로 생성"""
     if not news_list:
         return None
@@ -61,7 +78,7 @@ def create_news_message(news_list: list, news_type: str, emoji: str) -> str | No
             try:
                 number_emoji = _NUMBER_EMOJIS[i] if i < len(_NUMBER_EMOJIS) else f"{i + 1}."
                 # 본문을 못 가져온 기사는 제목을 대신 요약한다
-                summary = summarize_article(article.get('content') or article['title'])
+                summary = _summarize(article.get('content') or article['title'], report)
                 lines.append(f"{number_emoji} {_format_title(article)}")
                 lines.append(f"→ {escape(summary)}")
                 lines.append("")
@@ -91,7 +108,7 @@ async def main():
                 logger.info(f"{category.name}: 새로 보낼 기사가 없습니다.")
                 continue
 
-            message = create_news_message(articles, category.name, category.emoji)
+            message = create_news_message(articles, category.name, category.emoji, report)
             if await send_news_safely(message, category.name):
                 mark_as_sent(articles)
 

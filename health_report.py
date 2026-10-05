@@ -3,12 +3,16 @@ from html import escape
 
 # 본문을 못 가져온 기사가 이 비율 이상이면 셀렉터가 깨진 것으로 보고 경고한다
 MISSING_BODY_ALERT_RATIO = 0.5
+# 요약 실패가 이 비율 이상이면 API 키/크레딧 문제 등으로 보고 경고한다
+SUMMARY_FAILURE_ALERT_RATIO = 0.5
 
 
 @dataclass
 class HealthReport:
     """실행 중 소스별 수집 결과를 모아, 스크래퍼가 조용히 깨진 경우를 찾아낸다"""
     warnings: list[str] = field(default_factory=list)
+    summaries_total: int = 0
+    summary_failures: list[str] = field(default_factory=list)
 
     def record_source(self, category: str, source: str, articles: list[dict]) -> None:
         if not articles:
@@ -22,10 +26,25 @@ class HealthReport:
     def record_error(self, category: str, source: str, error: Exception) -> None:
         self.warnings.append(f"{category}/{source}: 오류 - {error}")
 
+    def record_summary(self, failure_reason: str | None = None) -> None:
+        """기사 하나의 요약 결과를 기록. 실패했으면 원인을 넘긴다."""
+        self.summaries_total += 1
+        if failure_reason is not None:
+            self.summary_failures.append(failure_reason)
+
+    def _summary_warning(self) -> str | None:
+        failed = len(self.summary_failures)
+        if not self.summaries_total or failed / self.summaries_total < SUMMARY_FAILURE_ALERT_RATIO:
+            return None
+        reasons = ", ".join(dict.fromkeys(self.summary_failures))
+        return f"요약 실패 {failed}/{self.summaries_total}건 ({reasons})"
+
     def format_alert(self) -> str | None:
         """경고가 있으면 텔레그램(HTML 모드)으로 보낼 메시지를, 없으면 None을 반환"""
-        if not self.warnings:
+        summary_warning = self._summary_warning()
+        warnings = self.warnings + ([summary_warning] if summary_warning else [])
+        if not warnings:
             return None
         lines = ["⚠️ 뉴스봇 점검 필요", ""]
-        lines.extend(f"- {escape(w)}" for w in self.warnings)
+        lines.extend(f"- {escape(w)}" for w in warnings)
         return "\n".join(lines)

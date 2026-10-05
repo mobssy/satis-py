@@ -40,6 +40,22 @@ class HealthReportTest(unittest.TestCase):
 
         self.assertIn("&lt;urlopen error&gt;", report.format_alert())
 
+    def test_warns_when_most_summaries_fail_with_deduped_reasons(self):
+        report = HealthReport()
+        for _ in range(3):
+            report.record_summary("credit_balance_exhausted")
+        report.record_summary(None)
+
+        self.assertIn("요약 실패 3/4건 (credit_balance_exhausted)", report.format_alert())
+
+    def test_tolerates_occasional_summary_failure(self):
+        report = HealthReport()
+        report.record_summary("TimeoutError")
+        report.record_summary(None)
+        report.record_summary(None)
+
+        self.assertIsNone(report.format_alert())
+
 
 if __name__ == "__main__":
     unittest.main()

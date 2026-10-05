@@ -59,7 +59,7 @@ Every day at **12:00 PM**, Satis-py automatically:
 | Top 5 | Top 5 | Top 5 | Top 5 | Top 5 | Top 5 (Tuesdays) |
 
 Articles already sent in the last 7 days are skipped and replaced with the next-ranked stories.
-If a source returns no articles or loses most article bodies (usually a site layout change), the bot also sends a "⚠️ 뉴스봇 점검 필요" alert.
+If a source returns no articles or loses most article bodies (usually a site layout change), or most OpenAI summaries fail (e.g. exhausted credits), the bot also sends a "⚠️ 뉴스봇 점검 필요" alert.
  
 ---
  
@@ -172,7 +172,7 @@ This source code is proprietary and confidential. Unauthorized copying, distribu
 | 상위 5개 | 상위 5개 | 상위 5개 | 상위 5개 | 상위 5개 | 상위 5개 (화요일) |
 
 최근 7일 안에 이미 보낸 기사는 건너뛰고 다음 순위 기사로 채웁니다.
-소스가 기사를 하나도 못 가져오거나 본문을 대부분 놓치면(대개 사이트 구조 변경) "⚠️ 뉴스봇 점검 필요" 알림도 함께 보냅니다.
+소스가 기사를 하나도 못 가져오거나 본문을 대부분 놓칠 때(대개 사이트 구조 변경), 또는 OpenAI 요약이 대부분 실패할 때(예: 크레딧 소진) "⚠️ 뉴스봇 점검 필요" 알림도 함께 보냅니다.
  
 ---
  
