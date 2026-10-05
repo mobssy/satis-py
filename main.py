@@ -7,15 +7,6 @@ from summarizer import BatchSummary, SummarizationError, fallback_summary, summa
 from seen_articles import filter_unseen, mark_as_sent
 from health_report import HealthReport
 
-logging.basicConfig(
-    level=logging.INFO,
-    format='[%(asctime)s] %(levelname)s - %(message)s',
-    datefmt='%Y-%m-%d %H:%M:%S',
-    handlers=[
-        logging.FileHandler('news_bot.log'),
-        logging.StreamHandler()
-    ]
-)
 logger = logging.getLogger(__name__)
 
 _NUMBER_EMOJIS = ['1️⃣', '2️⃣', '3️⃣', '4️⃣', '5️⃣', '6️⃣', '7️⃣', '8️⃣', '9️⃣', '🔟']
@@ -132,5 +123,18 @@ async def main():
         logger.error(f"프로그램 실행 중 오류 발생: {e}")
         raise
 
+def setup_logging() -> None:
+    """콘솔과 news_bot.log에 로그를 남긴다. 스크립트로 실행할 때만 호출해 import 시 부수효과를 없앤다."""
+    logging.basicConfig(
+        level=logging.INFO,
+        format='[%(asctime)s] %(levelname)s - %(message)s',
+        datefmt='%Y-%m-%d %H:%M:%S',
+        handlers=[
+            logging.FileHandler('news_bot.log'),
+            logging.StreamHandler()
+        ]
+    )
+
 if __name__ == "__main__":
+    setup_logging()
     asyncio.run(main())
