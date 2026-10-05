@@ -1,0 +1,30 @@
+name: Tests
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt pytest
+
+      # config.py가 import 시점에 환경변수를 요구하므로 더미 값을 넣는다 (네트워크 호출 없음)
+      - name: Run tests
+        env:
+          TELEGRAM_BOT_TOKEN: dummy-token
+          TELEGRAM_CHAT_ID: "0"
+          OPENAI_API_KEY: dummy-key
+        run: pytest -q
