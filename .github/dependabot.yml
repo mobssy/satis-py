@@ -1,0 +1,19 @@
+version: 2
+updates:
+  # Python 패키지: 보안 패치/업데이트를 주간 PR로 받고, CI 테스트가 검증한다
+  - package-ecosystem: pip
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      python-dependencies:
+        patterns: ["*"]
+
+  # GitHub Actions 버전(actions/checkout 등)
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly
+    groups:
+      github-actions:
+        patterns: ["*"]
