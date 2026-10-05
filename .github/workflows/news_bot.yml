@@ -2,14 +2,44 @@ name: Daily News Bot
 
 on:
   schedule:
-    # 뉴욕 오후 12시 기준 (DST 자동 적용 불가 — 수동 전환 필요)
-    # EDT (3월~11월, UTC-4): 0 16 * * *  ← 현재 적용
-    # EST (11월~3월, UTC-5): 0 17 * * *  ← 겨울에 이 줄로 교체
-    - cron: "0 16 * * *"
+    # GitHub cron은 UTC만 지원하므로 뉴욕 정오에 해당하는 두 시각을 모두 등록하고,
+    # 아래 "Check New York noon" 단계에서 현재 서머타임 여부에 맞는 쪽만 실행한다.
+    - cron: "0 16 * * *" # EDT (UTC-4)
+    - cron: "0 17 * * *" # EST (UTC-5)
   workflow_dispatch:
 
 jobs:
+  check-schedule:
+    runs-on: ubuntu-latest
+    outputs:
+      run: ${{ steps.gate.outputs.run }}
+    steps:
+      # 실행이 지연돼도 판정이 바뀌지 않도록 현재 시각이 아니라 트리거된 cron으로 판단한다.
+      - name: Check New York noon
+        id: gate
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          TRIGGER_CRON: ${{ github.event.schedule }}
+        run: |
+          if [ "$EVENT_NAME" != "schedule" ]; then
+            echo "run=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          if [ "$(TZ=America/New_York date +%z)" = "-0400" ]; then
+            expected="0 16 * * *"
+          else
+            expected="0 17 * * *"
+          fi
+          if [ "$TRIGGER_CRON" = "$expected" ]; then
+            echo "run=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "run=false" >> "$GITHUB_OUTPUT"
+            echo "Skipping: '$TRIGGER_CRON' is not New York noon today"
+          fi
+
   run-news-bot:
+    needs: check-schedule
+    if: needs.check-schedule.outputs.run == 'true'
     runs-on: ubuntu-latest
 
     steps:
