@@ -36,25 +36,20 @@ Every day at **12:00 PM**, Satis-py automatically:
 ```
 📰 오늘의 뉴스 브리핑
  
-1️⃣ Headline
+1️⃣ Headline (tap to open the article)
 → One-line AI summary
-🔗 Article link
  
 2️⃣ Headline
 → One-line AI summary
-🔗 Article link
  
 3️⃣ Headline
 → One-line AI summary
-🔗 Article link
  
 4️⃣ Headline
 → One-line AI summary
-🔗 Article link
  
 5️⃣ Headline
 → One-line AI summary
-🔗 Article link
 ```
  
 **Categories covered:**
@@ -64,6 +59,7 @@ Every day at **12:00 PM**, Satis-py automatically:
 | Top 5 | Top 5 | Top 5 | Top 5 | Top 5 | Top 5 (Tuesdays) |
 
 Articles already sent in the last 7 days are skipped and replaced with the next-ranked stories.
+If a source returns no articles or loses most article bodies (usually a site layout change), the bot also sends a "⚠️ 뉴스봇 점검 필요" alert.
  
 ---
  
@@ -94,10 +90,13 @@ satis-py/
 ├── telegram_sender.py        ← Telegram delivery
 ├── message_splitter.py       ← Splits long messages to fit Telegram limits
 ├── seen_articles.py          ← 7-day sent history to skip duplicates
+├── health_report.py          ← Detects silently broken scrapers and builds alerts
 ├── config.py                 ← Environment variable loading
 ├── check_bot.py              ← Bot connection / Chat ID diagnostic
 ├── test_*.py                 ← Unit tests
-└── .github/workflows/news_bot.yml  ← Daily run at noon New York time
+└── .github/workflows/
+    ├── news_bot.yml          ← Daily run at noon New York time
+    └── tests.yml             ← Runs tests on every push
 ```
  
 ---
@@ -150,25 +149,20 @@ This source code is proprietary and confidential. Unauthorized copying, distribu
 ```
 📰 오늘의 뉴스 브리핑
  
-1️⃣ 뉴스 제목
+1️⃣ 뉴스 제목 (누르면 기사로 이동)
 → AI 한 줄 요약
-🔗 기사 링크
  
 2️⃣ 뉴스 제목
 → AI 한 줄 요약
-🔗 기사 링크
  
 3️⃣ 뉴스 제목
 → AI 한 줄 요약
-🔗 기사 링크
  
 4️⃣ 뉴스 제목
 → AI 한 줄 요약
-🔗 기사 링크
  
 5️⃣ 뉴스 제목
 → AI 한 줄 요약
-🔗 기사 링크
 ```
  
 **커버하는 카테고리:**
@@ -178,6 +172,7 @@ This source code is proprietary and confidential. Unauthorized copying, distribu
 | 상위 5개 | 상위 5개 | 상위 5개 | 상위 5개 | 상위 5개 | 상위 5개 (화요일) |
 
 최근 7일 안에 이미 보낸 기사는 건너뛰고 다음 순위 기사로 채웁니다.
+소스가 기사를 하나도 못 가져오거나 본문을 대부분 놓치면(대개 사이트 구조 변경) "⚠️ 뉴스봇 점검 필요" 알림도 함께 보냅니다.
  
 ---
  
@@ -208,10 +203,13 @@ satis-py/
 ├── telegram_sender.py        ← 텔레그램 전송
 ├── message_splitter.py       ← 텔레그램 길이 제한에 맞춰 메시지 분할
 ├── seen_articles.py          ← 7일 전송 이력으로 중복 기사 제외
+├── health_report.py          ← 조용히 깨진 스크래퍼 감지 & 점검 알림 생성
 ├── config.py                 ← 환경변수 로드
 ├── check_bot.py              ← 봇 연결 / Chat ID 확인용 진단 스크립트
 ├── test_*.py                 ← 유닛 테스트
-└── .github/workflows/news_bot.yml  ← 매일 뉴욕 시간 정오 실행
+└── .github/workflows/
+    ├── news_bot.yml          ← 매일 뉴욕 시간 정오 실행
+    └── tests.yml             ← push마다 테스트 실행
 ```
  
 ---
