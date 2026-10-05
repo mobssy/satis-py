@@ -4,6 +4,7 @@ from news_categories import CATEGORIES, collect_unseen_articles
 from telegram_sender import send_telegram_message
 from summarizer import summarize_article
 from seen_articles import filter_unseen, mark_as_sent
+from health_report import HealthReport
 
 logging.basicConfig(
     level=logging.INFO,
@@ -52,7 +53,8 @@ def create_news_message(news_list: list, news_type: str, emoji: str) -> str | No
         for i, article in enumerate(filtered_news):
             try:
                 number_emoji = _NUMBER_EMOJIS[i] if i < len(_NUMBER_EMOJIS) else f"{i + 1}."
-                summary = summarize_article(article['content'])
+                # 본문을 못 가져온 기사는 제목을 대신 요약한다
+                summary = summarize_article(article.get('content') or article['title'])
                 lines.append(f"{number_emoji} {article['title']}")
                 lines.append(f"→ {summary}")
                 if article.get('url'):
@@ -71,13 +73,14 @@ def create_news_message(news_list: list, news_type: str, emoji: str) -> str | No
 async def main():
     try:
         logger.info("뉴스 수집 시작...")
+        report = HealthReport()
 
         for category in CATEGORIES:
             if not category.is_active():
                 logger.info(f"{category.name}: 오늘은 전송 대상이 아니므로 건너뜁니다.")
                 continue
 
-            articles = collect_unseen_articles(category, filter_unseen)
+            articles = collect_unseen_articles(category, filter_unseen, report)
             logger.info(f"{category.name} 뉴스 {len(articles)}개 수집 완료")
             if not articles:
                 logger.info(f"{category.name}: 새로 보낼 기사가 없습니다.")
@@ -86,6 +89,11 @@ async def main():
             message = create_news_message(articles, category.name, category.emoji)
             if await send_news_safely(message, category.name):
                 mark_as_sent(articles)
+
+        alert = report.format_alert()
+        if alert:
+            logger.warning(alert)
+            await send_news_safely(alert, "점검 알림")
 
         logger.info("모든 뉴스 전송 완료!")
 

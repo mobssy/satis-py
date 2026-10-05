@@ -69,7 +69,7 @@ def _fetch_korean_news(
 
                 articles.append({
                     'title': title,
-                    'content': content or f"제목: {title}\n\n내용을 가져올 수 없습니다.",
+                    'content': content,
                     'url': link,
                     'source': source,
                 })

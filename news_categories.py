@@ -4,6 +4,8 @@ from datetime import datetime
 from typing import Callable
 from zoneinfo import ZoneInfo
 
+from health_report import HealthReport
+
 from news_scraper import fetch_9to5mac_news, fetch_macrumors_news
 from korean_news_scraper import get_naver_news, get_nate_news, get_google_world_news
 from us_news_scraper import get_nj_hot_news, get_ny_hot_news
@@ -35,21 +37,32 @@ def is_tuesday() -> bool:
     return datetime.now(ZoneInfo('America/New_York')).weekday() == 1
 
 
-def collect_unseen_articles(category: NewsCategory, filter_unseen: ArticleFilter) -> list[Article]:
+def collect_unseen_articles(
+    category: NewsCategory,
+    filter_unseen: ArticleFilter,
+    report: HealthReport | None = None,
+) -> list[Article]:
     """카테고리의 소스들에서 아직 보내지 않은 기사를 limit만큼 수집
 
     이미 보낸 기사를 먼저 걸러낸 뒤 개수를 자르므로, 상위 기사가 겹쳐도
     다음 순위 기사로 채워진다. limit이 차면 남은 소스는 호출하지 않는다.
+    report를 넘기면 소스별 수집 결과(0개, 본문 누락, 오류)를 기록한다.
     """
     collected: list[Article] = []
     for source in category.sources:
         if len(collected) >= category.limit:
             break
+        source_name = getattr(source.fetch, '__name__', 'source')
         try:
             candidates = source.fetch()
         except Exception as e:
             logger.error(f"{category.name} 뉴스 소스 수집 중 오류 발생: {e}")
+            if report:
+                report.record_error(category.name, source_name, e)
             continue
+
+        if report:
+            report.record_source(category.name, source_name, candidates)
 
         unseen = filter_unseen(candidates)
         skipped = len(candidates) - len(unseen)

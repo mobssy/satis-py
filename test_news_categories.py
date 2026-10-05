@@ -1,6 +1,7 @@
 import unittest
 from unittest.mock import MagicMock
 
+from health_report import HealthReport
 from news_categories import NewsCategory, NewsSource, collect_unseen_articles
 
 
@@ -62,6 +63,36 @@ class CollectUnseenArticlesTest(unittest.TestCase):
         result = collect_unseen_articles(category, _filter_out())
 
         self.assertEqual([a["url"] for a in result], ["b1"])
+
+    def test_reports_empty_and_failing_sources(self):
+        def get_empty_news():
+            return []
+
+        def get_broken_news():
+            raise RuntimeError("boom")
+
+        category = NewsCategory(
+            "테스트", "📰",
+            (NewsSource(get_empty_news, 5), NewsSource(get_broken_news, 5)),
+            limit=5,
+        )
+        report = HealthReport()
+
+        collect_unseen_articles(category, _filter_out(), report)
+
+        self.assertEqual(report.warnings, [
+            "테스트/get_empty_news: 기사 0개",
+            "테스트/get_broken_news: 오류 - boom",
+        ])
+
+    def test_reports_on_fetched_candidates_not_unseen_subset(self):
+        source = NewsSource(lambda: [{"title": "a", "url": "a", "content": "본문"}], 5)
+        category = NewsCategory("테스트", "📰", (source,), limit=5)
+        report = HealthReport()
+
+        collect_unseen_articles(category, _filter_out("a"), report)
+
+        self.assertEqual(report.warnings, [])
 
 
 if __name__ == "__main__":

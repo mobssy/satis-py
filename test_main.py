@@ -21,6 +21,14 @@ class CreateNewsMessageTest(unittest.TestCase):
 
         self.assertNotIn("🔗", message)
 
+    @patch("main.summarize_article", return_value="요약된 내용입니다.")
+    def test_summarizes_title_when_body_missing(self, mock_summarize):
+        articles = [{"title": "헤드라인", "content": None, "url": "https://example.com/a"}]
+
+        create_news_message(articles, "테스트", "📰")
+
+        mock_summarize.assert_called_once_with("헤드라인")
+
 
 if __name__ == "__main__":
     unittest.main()
