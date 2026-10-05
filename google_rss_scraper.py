@@ -38,7 +38,8 @@ def fetch_google_rss_news(
 
                 title = item.title.text.strip()
                 link = item.link.text.strip()
-                summary = item.description.text.strip()
+                # description은 이스케이프된 HTML 조각이라 태그를 벗겨 텍스트만 사용
+                summary = BeautifulSoup(item.description.text, 'html.parser').get_text(' ', strip=True)
 
                 if not (title and link and summary):
                     continue
