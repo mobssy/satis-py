@@ -1,10 +1,33 @@
+import json
 import logging
+from dataclasses import dataclass
+
 import openai
 from config import OPENAI_API_KEY
 
 logger = logging.getLogger(__name__)
 
 _client = openai.OpenAI(api_key=OPENAI_API_KEY)
+
+_MODEL = "gpt-4o-mini"
+# 기사 하나당 프롬프트에 넣는 본문 길이 상한 (카테고리 전체 토큰을 제한하기 위함)
+_MAX_BODY_CHARS = 1500
+
+_SYSTEM_PROMPT = "너는 한국어 뉴스 브리핑 편집자야. 반드시 지정된 JSON 형식으로만 답변해."
+
+_INSTRUCTIONS = """아래 번호가 매겨진 뉴스 기사들을 브리핑용으로 정리해줘.
+
+규칙:
+1. 각 기사를 한국어 한 문장으로 요약해. '요약:' 같은 접두사는 붙이지 마.
+2. 내용이 제목뿐이거나 제목과 거의 같으면, 제목을 자연스러운 한국어로 옮기기만 하고 제목에 없는 사실은 절대 추가하지 마.
+3. 앞 번호의 기사와 같은 사건을 다루는 기사는 duplicate_of에 그 앞 기사 번호를, 아니면 null을 넣어.
+4. 모든 기사에 대해 하나씩 항목을 만들어.
+
+출력 형식:
+{"items": [{"index": 0, "summary": "...", "duplicate_of": null}, ...]}
+
+기사 목록:
+"""
 
 
 class SummarizationError(Exception):
@@ -15,30 +38,79 @@ class SummarizationError(Exception):
         self.reason = reason
 
 
-def summarize_article(text: str) -> str:
-    """뉴스 기사를 한국어 한 문장으로 요약. 실패하면 SummarizationError를 던진다."""
-    prompt = (
-        "다음 뉴스 기사를 한국어로 한 문장으로만 요약해줘. "
-        "반드시 한 문장, 한글로만 답변해. 앞에 '요약:' 같은 접두사 없이 바로 내용만 써줘.\n\n"
-        f"{text}"
-    )
+@dataclass(frozen=True)
+class BatchSummary:
+    """입력 기사 순서대로의 요약과, 같은 사건을 다룬 앞 기사 번호(없으면 None)"""
+    summaries: list[str]
+    duplicate_of: list[int | None]
+
+
+def _build_prompt(articles: list[dict]) -> str:
+    blocks = []
+    for i, article in enumerate(articles):
+        body = (article.get('content') or "")[:_MAX_BODY_CHARS]
+        blocks.append(f"[{i}] 제목: {article['title']}\n내용: {body or '(없음)'}")
+    return _INSTRUCTIONS + "\n\n".join(blocks)
+
+
+def _valid_duplicate_target(target: object, index: int, duplicate_of: list[int | None]) -> int | None:
+    """앞쪽의, 그 자체는 중복이 아닌 기사를 가리킬 때만 인정한다"""
+    if isinstance(target, int) and not isinstance(target, bool) and 0 <= target < index:
+        return target if duplicate_of[target] is None else None
+    return None
+
+
+def parse_batch_response(raw: str | None, count: int) -> BatchSummary:
+    """모델 응답(JSON)을 검증해 BatchSummary로 변환. 형식이 틀리면 SummarizationError."""
+    if raw is None:
+        # 모델이 거절하는 등 본문 없이 응답한 경우
+        raise SummarizationError("empty_response")
+    try:
+        items = json.loads(raw)["items"]
+        by_index = {item["index"]: item for item in items}
+        ordered = [by_index[i] for i in range(count)]
+    except (json.JSONDecodeError, KeyError, TypeError) as e:
+        raise SummarizationError("invalid_response") from e
+
+    summaries: list[str] = []
+    duplicate_of: list[int | None] = []
+    for i, item in enumerate(ordered):
+        summary = item.get("summary")
+        if not isinstance(summary, str) or not summary.strip():
+            raise SummarizationError("invalid_response")
+        summaries.append(summary.strip())
+        duplicate_of.append(_valid_duplicate_target(item.get("duplicate_of"), i, duplicate_of))
+
+    return BatchSummary(summaries, duplicate_of)
+
+
+def summarize_articles(articles: list[dict]) -> BatchSummary:
+    """카테고리의 기사들을 한 번의 API 호출로 요약하고 같은 사건을 다룬 기사를 표시한다.
+
+    실패하면 SummarizationError를 던진다.
+    """
+    if not articles:
+        return BatchSummary([], [])
 
     try:
         response = _client.chat.completions.create(
-            model="gpt-4o-mini",
+            model=_MODEL,
             messages=[
-                {"role": "system", "content": "너는 뉴스 요약 전문가야. 반드시 한 문장, 한글로만 답변해."},
-                {"role": "user", "content": prompt},
+                {"role": "system", "content": _SYSTEM_PROMPT},
+                {"role": "user", "content": _build_prompt(articles)},
             ],
-            max_tokens=100,
-            temperature=0.5,
+            response_format={"type": "json_object"},
+            max_tokens=150 * len(articles),
+            temperature=0.3,
         )
-        summary = response.choices[0].message.content.strip()
-        logger.info("기사 요약 성공")
-        return summary
+        raw = response.choices[0].message.content
     except Exception as e:
         logger.error(f"[요약 실패] {e}")
         raise SummarizationError(getattr(e, 'code', None) or type(e).__name__) from e
+
+    result = parse_batch_response(raw, len(articles))
+    logger.info(f"기사 {len(articles)}개 일괄 요약 성공")
+    return result
 
 
 def fallback_summary(text: str, max_length: int = 150) -> str:

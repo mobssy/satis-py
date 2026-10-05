@@ -30,7 +30,7 @@ Because staying informed should feel good — not like a chore.
 Every day at **12:00 PM**, Satis-py automatically:
  
 1. Fetches the hottest headlines across 6 categories
-2. Summarizes each story into one clean line using OpenAI
+2. Summarizes each story into one clean line using OpenAI — one request per category, merging stories that cover the same event
 3. Delivers everything to Telegram — formatted and ready to read
  
 ```
@@ -143,7 +143,7 @@ This source code is proprietary and confidential. Unauthorized copying, distribu
 매일 **오후 12시**, Satis-py가 자동으로:
  
 1. 6개 카테고리에서 가장 핫한 헤드라인 수집
-2. OpenAI로 각 뉴스를 한 줄로 요약
+2. OpenAI로 각 뉴스를 한 줄로 요약 — 카테고리당 한 번에 요약하고, 같은 사건을 다룬 기사는 하나로 합침
 3. 텔레그램으로 깔끔하게 포맷해서 전송
  
 ```

@@ -3,7 +3,7 @@ import logging
 from html import escape
 from news_categories import CATEGORIES, collect_unseen_articles
 from telegram_sender import send_telegram_message
-from summarizer import SummarizationError, fallback_summary, summarize_article
+from summarizer import BatchSummary, SummarizationError, fallback_summary, summarize_articles
 from seen_articles import filter_unseen, mark_as_sent
 from health_report import HealthReport
 
@@ -40,17 +40,22 @@ def _format_title(article: dict) -> str:
     url = article.get('url')
     return f'<a href="{escape(url, quote=True)}">{title}</a>' if url else title
 
-def _summarize(text: str, report: HealthReport | None) -> str:
-    """요약에 실패하면 본문 앞부분으로 대체하고, 결과를 report에 기록한다"""
+def _summarize(articles: list[dict], report: HealthReport | None) -> BatchSummary:
+    """카테고리를 한 번에 요약. 실패하면 기사별 본문(없으면 제목) 앞부분으로 대체하고,
+    결과를 기사 수만큼 report에 기록한다."""
     try:
-        summary = summarize_article(text)
+        result = summarize_articles(articles)
         failure_reason = None
     except SummarizationError as e:
-        summary = fallback_summary(text)
+        result = BatchSummary(
+            [fallback_summary(a.get('content') or a['title']) for a in articles],
+            [None] * len(articles),
+        )
         failure_reason = e.reason
     if report:
-        report.record_summary(failure_reason)
-    return summary
+        for _ in articles:
+            report.record_summary(failure_reason)
+    return result
 
 def create_news_message(
     news_list: list,
@@ -70,21 +75,25 @@ def create_news_message(
                 seen_titles.add(article['title'])
                 filtered_news.append(article)
 
-        logger.info(f"전송될 {news_type} 뉴스: {len(filtered_news)}개")
+        result = _summarize(filtered_news, report)
+        # 같은 사건을 다룬 뒤쪽 기사는 빼고 앞 기사만 남긴다
+        kept = [
+            (article, summary)
+            for article, summary, duplicate_of in zip(filtered_news, result.summaries, result.duplicate_of)
+            if duplicate_of is None
+        ]
+        merged = len(filtered_news) - len(kept)
+        if merged:
+            logger.info(f"{news_type}: 같은 사건 기사 {merged}개 합침")
+        logger.info(f"전송될 {news_type} 뉴스: {len(kept)}개")
 
         lines = [f"{emoji} 오늘의 뉴스 브리핑\n"]
 
-        for i, article in enumerate(filtered_news):
-            try:
-                number_emoji = _NUMBER_EMOJIS[i] if i < len(_NUMBER_EMOJIS) else f"{i + 1}."
-                # 본문을 못 가져온 기사는 제목을 대신 요약한다
-                summary = _summarize(article.get('content') or article['title'], report)
-                lines.append(f"{number_emoji} {_format_title(article)}")
-                lines.append(f"→ {escape(summary)}")
-                lines.append("")
-            except Exception as e:
-                logger.error(f"{news_type} 뉴스 기사 처리 중 오류 발생: {e}")
-                continue
+        for i, (article, summary) in enumerate(kept):
+            number_emoji = _NUMBER_EMOJIS[i] if i < len(_NUMBER_EMOJIS) else f"{i + 1}."
+            lines.append(f"{number_emoji} {_format_title(article)}")
+            lines.append(f"→ {escape(summary)}")
+            lines.append("")
 
         return "\n".join(lines)
 
